@@ -14,6 +14,8 @@
                 light's polarization; "R" or "L" makes it circular;
                 "none" makes an unpolarized source. Without it, the
                 light is at 0°.
+                Optional: color: "white" (or "green", "blue") sets the
+                light's colour. Without it, the laser is red.
      detectors  the targets; the level is solved when ALL are lit.
                 Add  need: 0.5  to a detector to make it need at least
                 50% of the laser's light (need: 1 means all of it).
@@ -23,6 +25,9 @@
                 Add  accepts: "R"  (or "L", 0, 45, 90, 135) to make a
                 detector count only that polarization, as if it had a
                 filter in front.
+                Add  color: "green"  (or "red", "blue") to make it count
+                only that colour; color: "white" means it needs red,
+                green AND blue to arrive.
      walls      blocks that stop the beam (can be an empty list: [])
      fixed      pieces already bolted to the table; the player can't
                 move or turn them (optional; leave out if none)
@@ -30,16 +35,39 @@
                 or { mirror: 1, splitter: 2 }. The first one listed is
                 selected when the level opens.
      par        the fewest pieces that solve the level. Solving with
-                par or fewer earns ★★★, one more earns ★★, more ★
+                par or fewer earns ★★★, one more earns ★★, more ★.
+                Leave it out and the level gives no stars, just "Solved".
+     tutorial   (training levels only) the guided steps; see below
      note       a short explanation shown under the board
 
    Every level needs its own unique name: saved stars are stored under
    the name, so renaming a level resets its stars for visitors.
 
-   Piece types: "mirror", "splitter", "polarizer", "halfwave" and
-   "quarterwave" (see physics/pieces.js).
+   Piece types: "mirror", "splitter", "polarizer", "halfwave",
+   "quarterwave", "pbs", "displacer", "prism", "dye", "dichroic-red",
+   "dichroic-green" and "dichroic-blue" (see physics/pieces.js).
+   In a tray, names with a dash need quotes: { "dichroic-green": 1 }.
    Angles: 0 looks like  —   45 like  /   90 like  |   135 like  \
    Mirrors and splitters use 45 or 135; the others can use all four.
+
+   TRAINING STEPS
+   A training level has a "tutorial" list. Each step shows its "say"
+   text in a bubble and waits for one thing:
+     next: "Next"                      a button in the bubble to press
+     select: "splitter"                pick that piece in the tray
+     place: { row, col, type }         put that piece on the glowing hole
+     turn: { row, col, until: 135 }    tap the piece until it reaches
+                                       that angle (an arrow shows how)
+   Taps anywhere else show a short "not there" pop-up.
+   Any step can also show an animated light wave in its bubble:
+     wave: { input: 45, element: { type: "polarizer", angle: 0 } }
+     wave: { input: 45, crystal: { retard: 90 } }
+   (see drawing/wave.js for what it draws).
+
+   Guided levels in chapter 0 are called "Training": they're always
+   open, and Chapter 1 opens even if the player skips them. Guided
+   levels inside other chapters are called "Guides": they unlock in
+   order like ordinary levels.
    ===================================================================== */
 
 // Shortcuts for writing a straight line of walls:
@@ -51,14 +79,76 @@ const wallCol = (col, rows) => rows.map((row) => ({ row, col }));
 
 /* Chapter titles, shown on the level-select screen. */
 export const CHAPTERS = {
+  0: "Training",
   1: "Reflection",
   2: "Splitting",
   3: "Polarization",
-  4: "Wave plates",
+  4: "Birefringence",
+  5: "Colour",
 };
 
 
 export const LEVELS = [
+  /* ---------------- Training ---------------- */
+  {
+    name: "First Steps",
+    chapter: 0,
+    laser: { row: 4, col: 7, facing: "left" },
+    detectors: [{ row: 0, col: 3 }],
+    walls: [],
+    tray: { mirror: 1 },
+    note: "Mirrors turn the beam by 90°. Tap a mirror to turn it; tap it once more to pick it up.",
+    tutorial: [
+      {
+        say: "Welcome to the optical table! The laser on the right shoots a beam of light. Your goal: get the light into the detector at the top.",
+        next: "Next",
+      },
+      {
+        say: "Light travels in straight lines, so we need to steer it. Tap the glowing hole to place a mirror there.",
+        place: { row: 4, col: 3, type: "mirror" },
+      },
+      {
+        say: "The mirror turned the beam, but the wrong way: it goes down. Tap the mirror again to turn it.",
+        turn: { row: 4, col: 3, until: 135 },
+      },
+      {
+        say: "The detector glows green: solved! Tip: tapping a mirror once more picks it up, and Reset clears the table.",
+        next: "Got it",
+      },
+    ],
+  },
+  {
+    name: "Using the Tray",
+    chapter: 0,
+    laser: { row: 3, col: 0, facing: "right" },
+    detectors: [{ row: 3, col: 7 }, { row: 0, col: 4 }],
+    walls: [],
+    tray: { mirror: 1, splitter: 1 },
+    note: "The tray under the table holds the optics for each level. Tap one to choose it before placing it.",
+    tutorial: [
+      {
+        say: "This time there are two detectors, and the tray below the table holds two kinds of optics.",
+        next: "Next",
+      },
+      {
+        say: "Tap \"Beam splitter\" in the tray to choose it.",
+        select: "splitter",
+      },
+      {
+        say: "Now tap the glowing hole to place the beam splitter.",
+        place: { row: 3, col: 4, type: "splitter" },
+      },
+      {
+        say: "A beam splitter sends half the light straight on and half sideways. The number on each detector shows how much light it gets: 50% each.",
+        next: "Next",
+      },
+      {
+        say: "Solve levels with as few optics as possible to earn ★★★. Tap ⓘ any time to read about the physics. Have fun!",
+        next: "Start playing",
+      },
+    ],
+  },
+
   /* ---------------- Chapter 1: Reflection ---------------- */
   {
     name: "First Bounce",
@@ -157,14 +247,43 @@ export const LEVELS = [
 
   /* ---------------- Chapter 3: Polarization ---------------- */
   {
-    name: "Attenuator",
+    name: "Meet Polarization",
     chapter: 3,
     laser: { row: 3, col: 0, facing: "right" },
     detectors: [{ row: 3, col: 7, need: 0.5, max: 0.5 }],
     walls: [],
     tray: { polarizer: 1 },
-    par: 1,
-    note: "The ticks on the beam show its polarization. A polarizer turned 45° away from it lets through cos²45° = half (Malus's law). Physicists dim lasers this way to protect delicate samples.",
+    note: "A polarizer only passes the part of the wave wiggling along its lines: 45° apart lets through cos²45° = half the power (Malus's law). Physicists dim lasers this way to protect delicate samples.",
+    tutorial: [
+      {
+        say: "Light is a wave. Its electric field (red) wiggles from side to side as it travels along the beam. The direction of that wiggle is called its polarization.",
+        wave: { input: 90 },
+        next: "Next",
+      },
+      {
+        say: "The little circles show the same wiggle as if you looked straight down the beam. Our laser's light wiggles flat, parallel to the table: that's the — badge on the beam.",
+        wave: { input: 0 },
+        next: "Next",
+      },
+      {
+        say: "A polarizer only lets through the part of the wiggle along its lines. Here diagonal light meets a flat polarizer: what comes out is flat, and carries half the power.",
+        wave: { input: 45, element: { type: "polarizer", angle: 0 } },
+        next: "Next",
+      },
+      {
+        say: "Your turn. This delicate sample needs exactly 50%. Place the polarizer on the glowing hole.",
+        place: { row: 3, col: 3, type: "polarizer" },
+      },
+      {
+        say: "Its lines are flat, like the light, so everything gets through: too bright! Tap it to turn it to /.",
+        turn: { row: 3, col: 3, until: 45 },
+      },
+      {
+        say: "Exactly half! 45° apart passes half the power. Turned upright (|) it would block everything: try it after this lesson.",
+        wave: { input: 0, element: { type: "polarizer", angle: 45 } },
+        next: "Got it",
+      },
+    ],
   },
   {
     name: "Sunlight",
@@ -212,10 +331,52 @@ export const LEVELS = [
     note: "One sample needs at least half the light; the other must get exactly 25%. Split the beam, then dim just one arm with a polarizer.",
   },
 
-  /* ---------------- Chapter 4: Wave plates ---------------- */
+  /* ---- Chapter 3, part two: wave plates ---- */
+  {
+    name: "Wave Plates",
+    chapter: 3,
+    laser: { row: 3, col: 0, facing: "right" },
+    detectors: [{ row: 3, col: 7, accepts: "R", need: 1 }],
+    walls: [],
+    tray: { halfwave: 1, quarterwave: 1 },
+    note: "A quarter-wave plate with its axis 45° from the light's polarization makes circular light. Turn it the other way and it spins the other way.",
+    tutorial: [
+      {
+        say: "Wave plates are made of special crystals. Instead of throwing light away like a polarizer, they change its polarization, so no power is lost.",
+        next: "Next",
+      },
+      {
+        say: "A half-wave plate (½) turns the polarization. Here, with its axis at 45°, it turns flat light upright, at full strength.",
+        wave: { input: 0, element: { type: "halfwave", angle: 45 } },
+        next: "Next",
+      },
+      {
+        say: "A quarter-wave plate (¼) does something stranger: the wiggle starts to spin round as the wave travels. This is circular polarization, shown on the beam as R or L.",
+        wave: { input: 0, element: { type: "quarterwave", angle: 135 } },
+        next: "Next",
+      },
+      {
+        say: "This detector only counts right-handed (R) light. Choose the quarter-wave plate in the tray.",
+        select: "quarterwave",
+      },
+      {
+        say: "Place it on the glowing hole.",
+        place: { row: 3, col: 3, type: "quarterwave" },
+      },
+      {
+        say: "Its axis is flat, like the light, so nothing changes yet. Keep tapping it until the light comes out as R.",
+        turn: { row: 3, col: 3, until: 135 },
+      },
+      {
+        say: "Right-handed light: 100%! At the opposite angle you'd get L. And watch out: every mirror flips R and L.",
+        wave: { input: 0, element: { type: "quarterwave", angle: 135 } },
+        next: "Got it",
+      },
+    ],
+  },
   {
     name: "Turning Light",
-    chapter: 4,
+    chapter: 3,
     laser: { row: 3, col: 0, facing: "right" },
     detectors: [{ row: 3, col: 7, need: 1 }],
     walls: [],
@@ -225,18 +386,8 @@ export const LEVELS = [
     note: "A polarizer can only turn light by throwing some away. A half-wave plate turns it for free: with its axis at 45°, flat light comes out upright, at full power.",
   },
   {
-    name: "Going Circular",
-    chapter: 4,
-    laser: { row: 3, col: 0, facing: "right" },
-    detectors: [{ row: 3, col: 7, accepts: "R", need: 1 }],
-    walls: [],
-    tray: { quarterwave: 1 },
-    par: 1,
-    note: "A quarter-wave plate with its axis 45° from the light's polarization makes circular light: the wiggle spins round as it travels. Turn the plate the other way and it spins the other way.",
-  },
-  {
     name: "Left and Right",
-    chapter: 4,
+    chapter: 3,
     laser: { row: 6, col: 0, facing: "right" },
     detectors: [{ row: 6, col: 7, accepts: "R", need: 0.5 }, { row: 1, col: 4, accepts: "L", need: 0.5 }],
     walls: [],
@@ -246,7 +397,7 @@ export const LEVELS = [
   },
   {
     name: "Mirror Flip",
-    chapter: 4,
+    chapter: 3,
     laser: { row: 6, col: 0, facing: "right" },
     detectors: [{ row: 1, col: 5, accepts: "R", need: 1 }],
     walls: [],
@@ -254,5 +405,159 @@ export const LEVELS = [
     tray: { mirror: 3, halfwave: 1 },
     par: 2,
     note: "Every mirror flips circular light between R and L, so the number of bounces matters. In helicity-resolved experiments, physicists count every mirror between the wave plate and the sample.",
+  },
+
+  /* ---------------- Chapter 4: Birefringence ---------------- */
+  {
+    name: "Double Refraction",
+    chapter: 4,
+    laser: { row: 3, col: 0, facing: "right", polarization: 45 },
+    detectors: [{ row: 3, col: 7, need: 0.5 }, { row: 0, col: 3, need: 0.5 }],
+    walls: [],
+    tray: { pbs: 1 },
+    note: "A polarizing beam splitter sends flat light straight on and reflects upright light. Diagonal light is half of each.",
+    tutorial: [
+      {
+        say: "Some crystals, like calcite and quartz, are birefringent: light wiggling one way travels slower than light wiggling the other way. Inside, the wave splits into two parts that drift apart.",
+        wave: { input: 45, crystal: { retard: 90 } },
+        next: "Next",
+      },
+      {
+        say: "That's how wave plates work! A crystal just thick enough for one part to get a quarter of a wave ahead makes circular light. Half a wave ahead turns the polarization.",
+        wave: { input: 45, crystal: { retard: 180 } },
+        next: "Next",
+      },
+      {
+        say: "Birefringent crystals can also send the two parts different ways. A polarizing beam splitter (PBS) does just that. Place it on the glowing hole.",
+        place: { row: 3, col: 3, type: "pbs" },
+      },
+      {
+        say: "The flat part went straight on and the upright part reflected. Our light is diagonal, so it's half flat and half upright: 50% each.",
+        next: "Got it",
+      },
+    ],
+  },
+  {
+    name: "Even Split",
+    chapter: 4,
+    laser: { row: 3, col: 0, facing: "right" },
+    detectors: [{ row: 3, col: 7, need: 0.5 }, { row: 0, col: 4, need: 0.5 }],
+    walls: [],
+    fixed: [{ row: 3, col: 4, type: "pbs", angle: 45 }],
+    tray: { halfwave: 1, quarterwave: 1 },
+    par: 1,
+    note: "Flat light all goes straight through a PBS. Make it circular first, and it splits evenly: circular light is half flat and half upright.",
+  },
+  {
+    name: "Optical Switch",
+    chapter: 4,
+    laser: { row: 3, col: 0, facing: "right" },
+    detectors: [{ row: 0, col: 4, need: 1 }],
+    walls: [],
+    fixed: [{ row: 3, col: 4, type: "pbs", angle: 45 }],
+    tray: { halfwave: 1, polarizer: 1 },
+    par: 1,
+    note: "Turn the polarization and the PBS sends all the light the other way. Labs switch beams like this, without moving a single mirror.",
+  },
+  {
+    name: "Both Upright",
+    chapter: 4,
+    laser: { row: 6, col: 0, facing: "right", polarization: "none" },
+    detectors: [{ row: 6, col: 7, accepts: 90, need: 0.5 }, { row: 0, col: 5, accepts: 90, need: 0.5 }],
+    walls: [],
+    tray: { pbs: 1, mirror: 2, halfwave: 1 },
+    par: 2,
+    note: "A PBS splits unpolarized light into two beams with opposite polarizations. A half-wave plate can then turn one to match the other.",
+  },
+  {
+    name: "Seeing Double",
+    chapter: 4,
+    laser: { row: 3, col: 0, facing: "right", polarization: 45 },
+    detectors: [{ row: 3, col: 7, need: 0.5 }, { row: 2, col: 7, need: 0.5 }],
+    walls: [],
+    tray: { displacer: 1 },
+    par: 1,
+    note: "Calcite pushes the upright part of the light sideways, so one beam becomes two side by side. That's why writing seen through calcite appears twice.",
+  },
+  {
+    name: "Back Together",
+    chapter: 4,
+    laser: { row: 3, col: 0, facing: "right", polarization: 45 },
+    detectors: [{ row: 3, col: 7, need: 1 }],
+    walls: [],
+    fixed: [{ row: 3, col: 2, type: "displacer", angle: 45 }],
+    tray: { displacer: 1 },
+    par: 1,
+    note: "A second crystal, turned the other way, pushes the beam back. Pairs of calcite crystals like this are used to split and recombine beams with great precision.",
+  },
+
+  /* ---------------- Chapter 5: Colour ---------------- */
+  {
+    name: "Colours of Light",
+    chapter: 5,
+    laser: { row: 3, col: 0, facing: "right", color: "white" },
+    detectors: [{ row: 3, col: 7, color: "red" }, { row: 7, col: 3, color: "green" }, { row: 0, col: 3, color: "blue" }],
+    walls: [],
+    tray: { prism: 1 },
+    note: "A prism splits white light into its colours. The coloured dot on each detector shows which colour it wants.",
+    tutorial: [
+      {
+        say: "This laser makes white light. White light is really a mix of colours; on this table we use three: red, green and blue.",
+        next: "Next",
+      },
+      {
+        say: "Glass bends blue light a little more than red, so a prism fans white light out into its colours. Place the prism on the glowing hole.",
+        place: { row: 3, col: 3, type: "prism" },
+      },
+      {
+        say: "The colours split up, but green and blue went the wrong way round. The dot on each detector shows the colour it wants. Tap the prism to turn it over.",
+        turn: { row: 3, col: 3, until: 135 },
+      },
+      {
+        say: "Every colour found its detector! Raindrops do the same thing as prisms: that's how rainbows form. Each colour carries a third of the white light.",
+        next: "Got it",
+      },
+    ],
+  },
+  {
+    name: "Rainbow Routing",
+    chapter: 5,
+    laser: { row: 4, col: 0, facing: "right", color: "white" },
+    detectors: [{ row: 4, col: 7, color: "red" }, { row: 0, col: 6, color: "green" }, { row: 7, col: 5, color: "blue" }],
+    walls: [],
+    tray: { prism: 1, mirror: 3 },
+    par: 2,
+    note: "Where you put the prism decides where each colour can go. Spectrometers use a prism or a grating this way to measure the colours in light.",
+  },
+  {
+    name: "Pick a Colour",
+    chapter: 5,
+    laser: { row: 3, col: 0, facing: "right", color: "white" },
+    detectors: [{ row: 0, col: 3, color: "green" }, { row: 7, col: 5, color: "blue" }, { row: 3, col: 7, color: "red" }],
+    walls: [],
+    tray: { "dichroic-green": 1, "dichroic-blue": 1, mirror: 1 },
+    par: 2,
+    note: "A dichroic mirror reflects one colour and lets the rest through. Microscopes and projectors use them to separate and combine colours.",
+  },
+  {
+    name: "Glow",
+    chapter: 5,
+    laser: { row: 3, col: 0, facing: "right", color: "blue" },
+    detectors: [{ row: 6, col: 2, color: "green", need: 0.25 }],
+    walls: [],
+    tray: { dye: 1, mirror: 2 },
+    par: 1,
+    note: "The dye absorbs blue light and glows green in every direction. This is fluorescence: highlighter pens and glow sticks work the same way.",
+  },
+  {
+    name: "White Again",
+    chapter: 5,
+    laser: { row: 3, col: 0, facing: "right", color: "white" },
+    detectors: [{ row: 3, col: 7, color: "white" }],
+    walls: [],
+    fixed: [{ row: 3, col: 2, type: "prism", angle: 45 }],
+    tray: { mirror: 4, "dichroic-green": 1, "dichroic-blue": 1 },
+    par: 6,
+    note: "Newton did this in 1666: he split sunlight with one prism and put the colours back together, proving white light is a mix of colours, not something pure.",
   },
 ];

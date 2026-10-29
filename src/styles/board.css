@@ -1,8 +1,8 @@
 /* =====================================================================
    LASER MAZE — styles/board.css
-   The board screen: the board, the tray, Reset and Home, and the
-   text underneath. (The board's picture is drawn by the drawing/
-   files; this only styles what's around it.)
+   The board screen: the board, the tray, and the Reset / ⓘ / Home
+   buttons. (The board's picture is drawn by the drawing/ files; the
+   message panel and pop-up are styled in bubbles.css.)
    ===================================================================== */
 
 /* ---------- The board ---------- */
@@ -11,31 +11,163 @@
   justify-content: center;
 }
 
+/* The stage is exactly the board's size, so the pop-up can be placed
+   on top of it ("position: relative" lets its children float inside). */
+.lm-stage {
+  position: relative;
+}
+
 .lm-board {
   display: block;
   border-radius: 10px;
   touch-action: manipulation;   /* quick taps on phones, no double-tap zoom */
 }
 
-/* ---------- The tray under the board: [Mirror × 2]      [Reset] ---------- */
+/* ---------- The tray under the board ---------- */
 .lm-tray-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;          /* lets it stack on narrow phones */
-  gap: 10px;
+  gap: 12px;
   margin-top: 14px;
+}
+
+/* "Your optics: tap one to choose it" */
+.lm-tray-caption {
+  margin: 0 0 6px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.72rem;
+  opacity: 0.7;
 }
 
 .lm-tray {
   display: flex;
   flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* One optic card: the big button plus its small i in the corner.
+   "position: relative" lets the i sit on the card's corner. */
+.lm-card {
+  position: relative;
+}
+
+/* The big button: picture, name and count. It looks raised (a solid
+   shadow underneath, like a key) so it's clearly something to press. */
+.lm-piece {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 8px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.85rem;
+  color: var(--text, #222222);
+  background: var(--surface, #ffffff);
+  border: 2px solid color-mix(in srgb, var(--lm-accent) 55%, transparent);
+  border-radius: 12px;
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--lm-accent) 45%, transparent);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.lm-piece:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--lm-accent) 55%, transparent);
+}
+
+/* Pressed down while clicking, like a real key */
+.lm-piece:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--lm-accent) 45%, transparent);
+}
+
+.lm-piece-icon {
+  display: block;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.lm-piece-name {
+  text-align: left;
+}
+
+/* "×2" — how many are left */
+.lm-piece-count {
+  padding: 1px 7px;
+  font-size: 0.75rem;
+  background: color-mix(in srgb, var(--lm-accent) 15%, transparent);
+  border-radius: 999px;
+}
+
+/* The chosen optic: filled with the accent colour, with a glow */
+.lm-piece.lm-selected {
+  color: #ffffff;
+  background: var(--lm-accent);
+  border-color: var(--lm-accent);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--lm-accent) 60%, #000000),
+              0 0 0 4px color-mix(in srgb, var(--lm-accent) 25%, transparent);
+}
+
+.lm-piece.lm-selected .lm-piece-count {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* None left: faded, but still clickable (you can pick one back up) */
+.lm-piece.lm-empty {
+  opacity: 0.55;
+}
+
+/* The small i in the top-right corner of each card */
+.lm-piece-info {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-family: Georgia, serif;
+  font-size: 0.8rem;
+  font-style: italic;
+  font-weight: bold;
+  line-height: 1;
+  color: #ffffff;
+  background: #3e5f7d;          /* steel blue, like the detectors */
+  border: 2px solid var(--surface, #ffffff);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.lm-piece-info:hover {
+  filter: brightness(1.2);
+}
+
+/* Training: the optic the player should choose glows */
+.lm-piece.lm-attention {
+  border-color: #ffd84d;
+  animation: lm-attention 1.2s ease-in-out infinite;
+}
+
+@keyframes lm-attention {
+  0%, 100% { box-shadow: 0 3px 0 #e0b100, 0 0 0 2px rgba(255, 216, 77, 0.35); }
+  50%      { box-shadow: 0 3px 0 #e0b100, 0 0 0 7px rgba(255, 216, 77, 0.6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lm-piece.lm-attention { animation: none; }
+  .lm-piece { transition: none; }
+}
+
+/* ---------- Reset, ⓘ and Home, side by side on the right ---------- */
+.lm-actions {
+  display: flex;
   gap: 8px;
 }
 
-/* Shared look for tray pieces and the Reset button */
-.lm-piece,
-.lm-reset {
+/* Shared look for Reset and the icon buttons: quieter than the optic
+   cards, so the cards stand out as the main thing to press. */
+.lm-reset,
+.lm-icon {
   font-family: "Space Mono", monospace;
   font-size: 0.85rem;
   padding: 6px 12px;
@@ -46,85 +178,25 @@
   cursor: pointer;
 }
 
-.lm-piece:hover,
-.lm-reset:hover {
+.lm-reset:hover,
+.lm-icon:hover {
   background: color-mix(in srgb, var(--lm-accent) 12%, transparent);
 }
 
-/* The tray piece that is currently chosen */
-.lm-piece.lm-selected {
-  color: #ffffff;
-  background: var(--lm-accent);
-  border-color: var(--lm-accent);
-}
-
-/* ---------- Reset and Home, side by side on the right ---------- */
-.lm-actions {
-  display: flex;
-  gap: 8px;
-}
-
-/* The Home button: same look as Reset, with a house icon instead of
-   a word. "currentColor" in the icon makes it follow this text colour,
-   so it switches automatically in dark mode. */
-.lm-to-start {
+/* The icon buttons (ⓘ and Home). "currentColor" in the icons makes
+   them follow the text colour, so they switch in dark mode. */
+.lm-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 5px 10px;
-  color: var(--text, #222222);
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--lm-accent) 45%, transparent);
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.lm-to-start:hover {
-  background: color-mix(in srgb, var(--lm-accent) 12%, transparent);
-}
-
-.lm-to-start:focus-visible {
-  outline: 2px solid var(--lm-accent);
-  outline-offset: 2px;
 }
 
 /* Visible outline when using the keyboard (Tab key) */
 .lm-piece:focus-visible,
-.lm-reset:focus-visible {
+.lm-piece-info:focus-visible,
+.lm-reset:focus-visible,
+.lm-icon:focus-visible {
   outline: 2px solid var(--lm-accent);
   outline-offset: 2px;
-}
-
-/* "Tap an empty hole to place a mirror…" */
-.lm-hint {
-  margin: 8px 0 0;
-  font-family: "Space Mono", monospace;
-  font-size: 0.75rem;
-  opacity: 0.65;
-}
-
-/* ---------- Text under everything ---------- */
-
-/* "The detector is still dark." / "★★★ Solved with 1 piece." */
-.lm-status {
-  margin: 16px 0 4px;
-  text-align: center;
-  font-family: "Space Mono", monospace;
-  font-size: 0.9rem;
-  opacity: 0.85;
-}
-
-.lm-status.lm-solved {
-  color: var(--lm-success);
-  opacity: 1;
-}
-
-/* The short physics note under the board */
-.lm-note {
-  margin: 0;
-  text-align: center;
-  font-family: "Crimson Pro", Georgia, serif;
-  font-size: 1.05rem;
-  font-style: italic;
-  opacity: 0.8;
 }

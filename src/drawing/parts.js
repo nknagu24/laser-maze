@@ -12,6 +12,7 @@
 import { SETTINGS } from "../settings.js";
 import { line } from "./canvas.js";
 import { isDetectorLit, hasEnough, hasTooMuch } from "../physics/beam.js";
+import { drawColour, coloursOf } from "../physics/colour.js";
 import { drawPolBadge } from "./symbols.js";
 
 
@@ -44,9 +45,10 @@ export function drawLaser(ctx, cell, laser) {
   ctx.fillStyle = c.warning;
   ctx.fillRect(-cell * 0.3, -cell * 0.22, cell * 0.08, cell * 0.44);
 
-  // aperture (where the light comes out)
-  ctx.fillStyle = c.beam;
-  ctx.shadowColor = c.beam;
+  // aperture (where the light comes out), in the laser's colour
+  const beamColour = drawColour(coloursOf(laser.color));
+  ctx.fillStyle = beamColour;
+  ctx.shadowColor = beamColour;
   ctx.shadowBlur = cell * 0.2;
   ctx.beginPath();
   ctx.arc(cell * 0.32, 0, cell * 0.06, 0, Math.PI * 2);
@@ -56,7 +58,7 @@ export function drawLaser(ctx, cell, laser) {
 }
 
 
-/* A detector: a square metal housing with a round sensor window.
+/* A detector: a steel-blue housing with a round sensor window.
      • dark window   → no light at all
      • amber window  → some light, but less than it needs
      • red window    → too much light for a delicate sample
@@ -71,19 +73,19 @@ export function drawLaser(ctx, cell, laser) {
      • at the top, what it wants, if the level sets it:
          "≥50%" at least,  "≤50%" at most,
          "=25%" exactly,   "25–50%" a range */
-export function drawDetector(ctx, cell, detector, power) {
+export function drawDetector(ctx, cell, detector, power, seenColours) {
   const c = SETTINGS.colors;
   const x = detector.col * cell + cell / 2;
   const y = detector.row * cell + cell / 2;
-  const lit = isDetectorLit(detector, power);
+  const lit = isDetectorLit(detector, power, seenColours);
 
   ctx.save();
 
-  // housing (a little taller if it has numbers to show)
+  // housing: steel blue, so detectors stand out from the dark table
   const half = cell * 0.36;
-  ctx.fillStyle = c.housing;
-  ctx.strokeStyle = c.housingEdge;
-  ctx.lineWidth = 1.5;
+  ctx.fillStyle = c.detector;
+  ctx.strokeStyle = c.detectorEdge;
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.roundRect(x - half, y - half, half * 2, half * 2, cell * 0.1);
   ctx.fill();
@@ -123,10 +125,44 @@ export function drawDetector(ctx, cell, detector, power) {
 
   ctx.restore();
 
-  // Polarization badge for picky detectors.
+  // Polarization badge for picky detectors (top-left corner).
   if (detector.accepts !== undefined) {
     drawPolBadge(ctx, x - half, y - half, cell * 0.13, detector.accepts);
   }
+
+  // Colour dot for colour-picky detectors (top-right corner): its
+  // colour, or a three-colour dot for one that wants white light.
+  if (detector.color) {
+    drawColourDot(ctx, x + half, y - half, cell * 0.12, detector.color);
+  }
+}
+
+
+/* A small round dot showing a colour; "white" shows red, green and
+   blue slices. */
+function drawColourDot(ctx, x, y, r, colour) {
+  ctx.save();
+  ctx.strokeStyle = SETTINGS.colors.polBadge;
+  ctx.lineWidth = 2;
+  if (colour === "white") {
+    ["red", "green", "blue"].forEach((name, i) => {
+      ctx.fillStyle = drawColour([name]);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.arc(x, y, r, -Math.PI / 2 + (i * 2 * Math.PI) / 3, -Math.PI / 2 + ((i + 1) * 2 * Math.PI) / 3);
+      ctx.closePath();
+      ctx.fill();
+    });
+  } else {
+    ctx.fillStyle = drawColour([colour]);
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 
@@ -351,6 +387,163 @@ export function drawQuarterWave(ctx, cell, piece, isFixed) {
 }
 
 
+/* A round mount, the base most optics stand on. Fixed (bolted-down)
+   pieces get a bronze one. Expects the pen already moved to the cell's
+   centre. */
+function drawMount(ctx, cell, isFixed, size = 0.3) {
+  const c = SETTINGS.colors;
+  ctx.fillStyle = isFixed ? c.mountFixed : c.mount;
+  ctx.strokeStyle = c.housingEdge;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(0, 0, cell * size, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+}
+
+
+/* A polarizing beam splitter: like the beam splitter cube, but tinted
+   amber, with small — and | marks showing what it sorts. */
+export function drawPBS(ctx, cell, piece, isFixed) {
+  const c = SETTINGS.colors;
+  ctx.save();
+  ctx.translate(piece.col * cell + cell / 2, piece.row * cell + cell / 2);
+  drawMount(ctx, cell, isFixed);
+
+  const s = cell * 0.22;
+  ctx.fillStyle = c.pbsGlass;
+  ctx.strokeStyle = c.pbsEdge;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.rect(-s, -s, s * 2, s * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.strokeStyle = c.mirrorFace;
+  ctx.lineWidth = 2;
+  if (piece.angle === 45) line(ctx, -s, s, s, -s);
+  else line(ctx, -s, -s, s, s);
+
+  // tiny — and | in the two empty corners
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = c.pbsEdge;
+  const k = s * 0.5;
+  if (piece.angle === 45) {
+    line(ctx, -s * 0.85, -s * 0.5, -s * 0.85 + k, -s * 0.5);   // — top-left
+    line(ctx, s * 0.6, s * 0.3, s * 0.6, s * 0.3 + k);         // | bottom-right
+  } else {
+    line(ctx, -s * 0.85, s * 0.5, -s * 0.85 + k, s * 0.5);     // — bottom-left
+    line(ctx, s * 0.6, -s * 0.8, s * 0.6, -s * 0.8 + k);       // | top-right
+  }
+  ctx.restore();
+}
+
+
+/* A calcite crystal: a pale, slanted rhombus (calcite's natural
+   shape). Turning it (45° ↔ 135°) mirrors the slant, and swaps which
+   side the upright beam is pushed to. */
+export function drawDisplacer(ctx, cell, piece, isFixed) {
+  const c = SETTINGS.colors;
+  ctx.save();
+  ctx.translate(piece.col * cell + cell / 2, piece.row * cell + cell / 2);
+  drawMount(ctx, cell, isFixed, 0.33);
+
+  const s = cell * 0.24;
+  const flip = piece.angle === 45 ? 1 : -1;
+  ctx.fillStyle = c.calcite;
+  ctx.strokeStyle = c.calciteEdge;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-s * flip, s * 0.7);
+  ctx.lineTo(-s * 0.4 * flip, -s * 0.7);
+  ctx.lineTo(s * flip, -s * 0.7);
+  ctx.lineTo(s * 0.4 * flip, s * 0.7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // two faint inner lines: the "double image" calcite is famous for
+  ctx.globalAlpha = 0.6;
+  ctx.lineWidth = 1;
+  line(ctx, -s * 0.3, -s * 0.15, s * 0.3, -s * 0.15);
+  line(ctx, -s * 0.3, s * 0.15, s * 0.3, s * 0.15);
+  ctx.restore();
+}
+
+
+/* A prism: a glass triangle with a little rainbow along one face.
+   Turned over (135°) it points the other way, sending green and blue
+   to the opposite sides. */
+export function drawPrism(ctx, cell, piece, isFixed) {
+  const c = SETTINGS.colors;
+  ctx.save();
+  ctx.translate(piece.col * cell + cell / 2, piece.row * cell + cell / 2);
+  drawMount(ctx, cell, isFixed, 0.33);
+
+  const s = cell * 0.26;
+  const flip = piece.angle === 45 ? 1 : -1;
+  ctx.fillStyle = c.glass;
+  ctx.strokeStyle = c.glassEdge;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, -s * flip);
+  ctx.lineTo(s * 0.95, s * 0.75 * flip);
+  ctx.lineTo(-s * 0.95, s * 0.75 * flip);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // rainbow fan on the right face
+  ["red", "green", "blue"].forEach((name, i) => {
+    ctx.strokeStyle = drawColour([name]);
+    ctx.lineWidth = 2;
+    const t = 0.35 + i * 0.2;
+    line(ctx, s * 0.95 * t, (-s + (s * 1.75) * t) * flip, s * 0.95 * t + s * 0.35, (-s + (s * 1.75) * t) * flip + (i - 1) * s * 0.18 * flip);
+  });
+  ctx.restore();
+}
+
+
+/* A dichroic mirror: like a mirror, but its face is the colour it
+   reflects. */
+function drawDichroic(ctx, cell, piece, isFixed, colour) {
+  const c = SETTINGS.colors;
+  ctx.save();
+  ctx.translate(piece.col * cell + cell / 2, piece.row * cell + cell / 2);
+  drawMount(ctx, cell, isFixed);
+
+  ctx.rotate((-piece.angle * Math.PI) / 180);
+  const length = cell * 0.78;
+  const thickness = cell * 0.11;
+  ctx.fillStyle = c.mirrorBack;
+  ctx.fillRect(-length / 2, -thickness / 2, length, thickness);
+  ctx.fillStyle = drawColour([colour]);
+  ctx.fillRect(-length / 2, -thickness / 2, length, thickness * 0.55);
+  ctx.restore();
+}
+
+
+/* Fluorescent dye: a small dish of yellow-green liquid. */
+export function drawDye(ctx, cell, piece, isFixed) {
+  const c = SETTINGS.colors;
+  ctx.save();
+  ctx.translate(piece.col * cell + cell / 2, piece.row * cell + cell / 2);
+  drawMount(ctx, cell, isFixed);
+
+  ctx.fillStyle = c.dye;
+  ctx.shadowColor = c.dye;
+  ctx.shadowBlur = cell * 0.15;
+  ctx.beginPath();
+  ctx.arc(0, 0, cell * 0.19, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = c.dyeEdge;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+}
+
+
 /* ---------------------------------------------------------------------
    PIECE_DRAWERS — which function draws which piece type.
    The names on the left must match the names in physics/pieces.js.
@@ -361,6 +554,13 @@ const PIECE_DRAWERS = {
   polarizer: drawPolarizer,
   halfwave: drawHalfWave,
   quarterwave: drawQuarterWave,
+  pbs: drawPBS,
+  displacer: drawDisplacer,
+  prism: drawPrism,
+  dye: drawDye,
+  "dichroic-red": (ctx, cell, piece, isFixed) => drawDichroic(ctx, cell, piece, isFixed, "red"),
+  "dichroic-green": (ctx, cell, piece, isFixed) => drawDichroic(ctx, cell, piece, isFixed, "green"),
+  "dichroic-blue": (ctx, cell, piece, isFixed) => drawDichroic(ctx, cell, piece, isFixed, "blue"),
 };
 
 /* Draw any placed or fixed piece by looking up its type above. */

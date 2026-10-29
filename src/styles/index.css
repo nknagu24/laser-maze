@@ -10,4 +10,5 @@
 @import "./start.css";    /* start screen */
 @import "./bar.css";      /* ‹ level name › bar */
 @import "./levels.css";   /* level-select screen */
-@import "./board.css";    /* board, tray, Reset/Home, status and note */
+@import "./board.css";    /* board, tray, Reset / ⓘ / Home */
+@import "./bubbles.css";  /* message panel beside/above the board, and the pop-up */

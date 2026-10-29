@@ -76,3 +76,13 @@
   outline: 2px solid var(--lm-accent);
   outline-offset: 2px;
 }
+
+
+/* In the Sandbox the name isn't a button (there are no levels to pick) */
+.lm-level:disabled {
+  cursor: default;
+}
+
+.lm-level:disabled:hover {
+  background: transparent;
+}

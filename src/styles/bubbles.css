@@ -1,0 +1,258 @@
+/* =====================================================================
+   LASER MAZE — styles/bubbles.css
+   The messages around the board:
+     • the panel with the status line and the speech bubble
+     • the short red pop-up ("Not there!") over the top of the board
+
+   LAYOUT
+   The panel never covers the table:
+     • game card 700px or wider → the panel sits to the RIGHT of the board
+     • narrower (phones)        → the panel sits just ABOVE the board
+   "@container" checks the width of the game card itself (not the
+   whole window), so this works wherever the game is placed on a page.
+   ===================================================================== */
+
+/* ---------- The board + panel area ---------- */
+
+/* Narrow screens: panel first (above), board second. */
+.lm-play-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lm-panel {
+  order: -1;                /* put the panel above the board */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Wide screens: board on the left, panel on the right. */
+@container (min-width: 700px) {
+  .lm-play-area {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .lm-play-area .lm-board-wrap {
+    flex: 1;                /* the board takes the space that's left */
+    min-width: 0;
+  }
+
+  .lm-panel {
+    order: 0;               /* back to the right-hand side */
+    flex: 0 0 260px;        /* a fixed-width column */
+  }
+}
+
+
+/* ---------- Status line ---------- */
+.lm-pill {
+  margin: 0;
+  padding: 6px 12px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-align: center;
+  background: color-mix(in srgb, var(--lm-accent) 10%, transparent);
+  border-radius: 999px;
+}
+
+
+/* ---------- Speech bubble ---------- */
+.lm-bubble {
+  position: relative;       /* so the × can sit in its corner */
+  padding: 12px 34px 12px 14px;   /* room on the right for the × */
+  color: #1d2129;
+  background: #fdfaf2;
+  border: 1px solid color-mix(in srgb, var(--lm-accent) 25%, transparent);
+  border-left: 4px solid var(--lm-accent);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  animation: lm-rise 0.25s ease-out;
+}
+
+@keyframes lm-rise {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+/* Each kind of bubble gets its own edge colour */
+.lm-bubble[data-kind="guide"] { border-left-color: #e0b100; }   /* training: yellow, like the guide */
+.lm-bubble[data-kind="win"]   { border-left-color: var(--lm-success); }
+.lm-bubble[data-kind="info"]  { border-left-color: var(--lm-accent); }
+.lm-bubble[data-kind="piece"] { border-left-color: #3e5f7d; }     /* steel blue, like the i buttons */
+
+/* Bold name above an optic's explanation ("Polarizer") */
+.lm-bubble-title {
+  margin: 0 0 6px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* Training bubbles have no × (they go away by doing the step) */
+.lm-bubble[data-kind="guide"] {
+  padding-right: 14px;
+}
+
+/* The animated light wave inside guide bubbles */
+.lm-bubble-wave {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+.lm-bubble-text {
+  margin: 0;
+  font-family: "Crimson Pro", Georgia, serif;
+  font-size: 1.02rem;
+  line-height: 1.45;
+}
+
+/* The bubble's main button: "Next", "Next level ›", "Got it"… */
+.lm-bubble-main {
+  display: block;
+  margin: 10px 0 0 auto;     /* pushed to the right */
+  padding: 6px 16px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.85rem;
+  color: #ffffff;
+  background: var(--lm-accent);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.lm-bubble-main:hover {
+  filter: brightness(1.1);
+}
+
+/* The × in the top-right corner */
+.lm-bubble-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #1d2129;
+  opacity: 0.6;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.lm-bubble-close:hover {
+  opacity: 1;
+}
+
+.lm-bubble-main:focus-visible,
+.lm-bubble-close:focus-visible {
+  outline: 2px solid var(--lm-accent);
+  outline-offset: 2px;
+}
+
+
+/* ---------- Pop-up over the top of the board ---------- */
+
+/* The layer over the board. "pointer-events: none" lets taps go
+   straight through to the board underneath. */
+.lm-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lm-toast {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 8px 14px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: center;
+  color: #ffffff;
+  background: #c0392b;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  animation: lm-pop 0.25s ease-out;
+}
+
+@keyframes lm-pop {
+  from { transform: translate(-50%, -6px); opacity: 0; }
+  to   { transform: translate(-50%, 0);    opacity: 1; }
+}
+
+
+/* Visitors who ask for less motion: no slide-in animations */
+@media (prefers-reduced-motion: reduce) {
+  .lm-toast,
+  .lm-bubble {
+    animation: none;
+  }
+}
+
+
+/* ---------- Sandbox: the laser's settings (in the panel) ---------- */
+.lm-sandbox {
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--lm-accent) 30%, transparent);
+  border-radius: 12px;
+}
+
+.lm-sandbox-title {
+  margin: 0 0 6px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+/* A row of small choice buttons ("chips") */
+.lm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.lm-chips:last-child {
+  margin-bottom: 0;
+}
+
+.lm-chips button {
+  min-width: 32px;
+  padding: 4px 8px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.78rem;
+  color: var(--text, #222222);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--lm-accent) 45%, transparent);
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.lm-chips button:hover {
+  background: color-mix(in srgb, var(--lm-accent) 12%, transparent);
+}
+
+/* The current choice */
+.lm-chips button.lm-on {
+  color: #ffffff;
+  background: var(--lm-accent);
+  border-color: var(--lm-accent);
+}
+
+.lm-chips button:focus-visible {
+  outline: 2px solid var(--lm-accent);
+  outline-offset: 2px;
+}

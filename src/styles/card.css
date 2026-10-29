@@ -10,7 +10,11 @@
   --lm-accent: var(--section-accent, #7a5a9a);
   --lm-success: #2f9e5f;    /* green for "solved" text */
 
-  max-width: 600px;
+  max-width: 860px;         /* room for the board plus the message panel beside it */
+
+  /* Lets the styles inside ask "how wide is the game card?" (not the
+     whole window), so the layout fits wherever the game is placed. */
+  container-type: inline-size;
   margin: 2rem auto;
   padding: 16px;
   background: var(--surface, #ffffff);
@@ -23,4 +27,23 @@
    "hidden" attribute. This rule makes sure nothing overrides that. */
 .lm-game [hidden] {
   display: none !important;
+}
+
+
+/* ---------- Fading in ----------
+   When a new screen, menu view or level appears, game.js adds the
+   "lm-fade" class, which plays this short, gentle fade and rise.
+   Change 0.35s to make it slower or faster. */
+.lm-fade {
+  animation: lm-fade-in 0.35s ease-out;
+}
+
+@keyframes lm-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Visitors who ask for less motion: no fade */
+@media (prefers-reduced-motion: reduce) {
+  .lm-fade { animation: none; }
 }

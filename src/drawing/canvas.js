@@ -12,10 +12,15 @@
    canvas to exactly rows × cols cells. Used for the game board and for
    the small picture on the start screen.
    "devicePixelRatio" keeps lines sharp on phones and Retina screens.
+
+   space: the element whose width says how much room there is.
+   Usually the canvas's parent; the board passes its wrapper instead,
+   because the board's direct parent (the "stage") is only ever as wide
+   as the board itself, and measuring it would keep the board stuck at
+   its first, small size.
    --------------------------------------------------------------------- */
-export function sizeBoard(canvas, rows, cols, maxWidth) {
-  const wrap = canvas.parentElement;
-  const available = Math.min(wrap.clientWidth, maxWidth);
+export function sizeBoard(canvas, rows, cols, maxWidth, space = canvas.parentElement) {
+  const available = Math.min(space.clientWidth, maxWidth);
   const cell = Math.floor(available / cols);   // size of one cell
   const width = cell * cols;
   const height = cell * rows;

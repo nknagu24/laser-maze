@@ -2,7 +2,7 @@
    LASER MAZE  —  frame.js
    ---------------------------------------------------------------------
    The HTML skeleton of the game: the start screen, the level bar, the
-   level-select screen and the board with its tray. Nothing here moves
+   level-select screen, and the board with its message panel and tray. Nothing here moves
    or reacts; game.js and the screens/ files fill it in and show one
    screen at a time.
 
@@ -22,34 +22,35 @@ export function buildFrame(mount) {
         <canvas class="lm-hero" aria-hidden="true"></canvas>
 
         <p class="lm-intro">
-          Guide a laser beam into the detector by placing mirrors on an
-          optical table. Every level teaches one idea about how light
-          behaves, the same ideas physicists use to build real experiments.
-        </p>
-        <p class="lm-howto">
-          Tap a hole to place a mirror. Tap the mirror to turn it, and tap
-          it once more to pick it up.
+          Steer a laser beam into the detector with mirrors and other
+          optics. Every level teaches one idea about how light behaves.
         </p>
 
-        <div class="lm-start-buttons">
-          <button class="lm-continue"></button>
-          <button class="lm-new">New game</button>
+        <!-- The start screen has three small "views"; one shows at a time. -->
+
+        <!-- View 1: the main menu -->
+        <div class="lm-view" data-view="menu">
+          <button class="lm-menu-button" data-go="story">Story mode</button>
+          <button class="lm-menu-button" data-go="chapters">Jump to a chapter</button>
+          <button class="lm-menu-button" data-go="sandbox">Sandbox</button>
         </div>
 
-        <aside class="lm-disclaimer">
-          <p class="lm-disclaimer-title">For young physicists</p>
-          <p>
-            Laser Maze is a learning tool for kids (and curious grown-ups)
-            to practise steering light and building optical setups. The
-            physics is simplified: these mirrors are perfect and the beams
-            never spread out.
-          </p>
-          <p>
-            Real lasers can permanently damage your eyes. Never look into
-            a laser beam or point one at anyone, and only use real lasers
-            with an adult's supervision.
-          </p>
-        </aside>
+        <!-- View 2: Story mode -->
+        <div class="lm-view" data-view="story" hidden>
+          <p class="lm-view-title">Story mode</p>
+          <div class="lm-start-buttons">
+            <button class="lm-continue"></button>
+            <button class="lm-new">New game</button>
+          </div>
+          <button class="lm-back" data-go="menu">‹ Back</button>
+        </div>
+
+        <!-- View 3: Jump to a chapter (the list is filled in by screens/start.js) -->
+        <div class="lm-view" data-view="chapters" hidden>
+          <p class="lm-view-title">Jump to a chapter</p>
+          <div class="lm-chapter-list"></div>
+          <button class="lm-back" data-go="menu">‹ Back</button>
+        </div>
       </section>
 
       <!-- ===== The bar above the board (board and levels screens) ===== -->
@@ -62,18 +63,75 @@ export function buildFrame(mount) {
       <!-- ===== Screen 3: level select ===== -->
       <div class="lm-levels"></div>
 
-      <!-- ===== Screen 2: the board and everything under it ===== -->
+      <!-- ===== Screen 2: the board, its message panel, and the tray ===== -->
       <div class="lm-play">
-        <div class="lm-board-wrap">
-          <canvas class="lm-board" aria-label="Laser Maze game board"></canvas>
+        <!-- On wide screens the panel sits beside the board; on narrow
+             screens it sits just above it. Either way it never covers
+             the table. (See styles/bubbles.css.) -->
+        <div class="lm-play-area">
+          <div class="lm-board-wrap">
+            <!-- The "stage" is exactly the size of the board, so the
+                 pop-up can float on top of it. -->
+            <div class="lm-stage">
+              <canvas class="lm-board" aria-label="Laser Maze game board"></canvas>
+              <div class="lm-overlay">
+                <p class="lm-toast" role="alert" hidden></p>
+              </div>
+            </div>
+          </div>
+
+          <aside class="lm-panel">
+            <p class="lm-pill" aria-live="polite"></p>
+            <div class="lm-bubble" hidden>
+              <button class="lm-bubble-close" data-action="close" aria-label="Close">×</button>
+              <p class="lm-bubble-title" hidden></p>
+              <canvas class="lm-bubble-wave" aria-hidden="true" hidden></canvas>
+              <p class="lm-bubble-text"></p>
+              <button class="lm-bubble-main"></button>
+            </div>
+
+            <!-- Sandbox only: the laser's settings -->
+            <div class="lm-sandbox" hidden>
+              <p class="lm-sandbox-title">Laser colour</p>
+              <div class="lm-chips" data-setting="color">
+                <button data-value="red">Red</button>
+                <button data-value="green">Green</button>
+                <button data-value="blue">Blue</button>
+                <button data-value="white">White</button>
+              </div>
+              <p class="lm-sandbox-title">Laser polarization</p>
+              <div class="lm-chips" data-setting="polarization">
+                <button data-value="0" title="Flat">—</button>
+                <button data-value="45" title="Diagonal">/</button>
+                <button data-value="90" title="Upright">|</button>
+                <button data-value="135" title="Diagonal">\</button>
+                <button data-value="R" title="Right-handed circular">R</button>
+                <button data-value="L" title="Left-handed circular">L</button>
+                <button data-value="none" title="Unpolarized">none</button>
+              </div>
+            </div>
+          </aside>
         </div>
 
         <div class="lm-tray-row">
-          <div class="lm-tray"></div>
+          <div class="lm-tray-box">
+            <p class="lm-tray-caption">Your optics: tap one to choose it</p>
+            <div class="lm-tray"></div>
+          </div>
           <div class="lm-actions">
             <button class="lm-reset">Reset</button>
-            <button class="lm-to-start" aria-label="Back to start screen" title="Back to start screen">
-              <!-- a small house icon, drawn with two lines -->
+            <button class="lm-icon lm-info" aria-label="About this level" title="About this level">
+              <!-- an "i" in a circle -->
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 11v6" />
+                <path d="M12 7.5v.01" />
+              </svg>
+            </button>
+            <button class="lm-icon lm-to-start" aria-label="Back to start screen" title="Back to start screen">
+              <!-- a small house -->
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
                    fill="none" stroke="currentColor" stroke-width="2"
                    stroke-linecap="round" stroke-linejoin="round">
@@ -83,10 +141,6 @@ export function buildFrame(mount) {
             </button>
           </div>
         </div>
-        <p class="lm-hint">Choose a piece in the tray, then tap an empty hole to place it. Tap a placed piece to turn it; tap it again to pick it up.</p>
-
-        <p class="lm-status" aria-live="polite"></p>
-        <p class="lm-note"></p>
       </div>
 
     </div>
@@ -99,6 +153,8 @@ export function buildFrame(mount) {
 
     start: mount.querySelector(".lm-start"),
     hero: mount.querySelector(".lm-hero"),
+    startViews: mount.querySelectorAll(".lm-view"),
+    chapterList: mount.querySelector(".lm-chapter-list"),
     continueButton: mount.querySelector(".lm-continue"),
     newButton: mount.querySelector(".lm-new"),
 
@@ -110,11 +166,22 @@ export function buildFrame(mount) {
     levelPanel: mount.querySelector(".lm-levels"),
 
     play: mount.querySelector(".lm-play"),
+    boardWrap: mount.querySelector(".lm-board-wrap"),
     canvas: mount.querySelector(".lm-board"),
     tray: mount.querySelector(".lm-tray"),
     resetButton: mount.querySelector(".lm-reset"),
+    infoButton: mount.querySelector(".lm-info"),
     homeButton: mount.querySelector(".lm-to-start"),
-    status: mount.querySelector(".lm-status"),
-    note: mount.querySelector(".lm-note"),
+
+    panel: mount.querySelector(".lm-panel"),
+    sandboxBox: mount.querySelector(".lm-sandbox"),
+    pill: mount.querySelector(".lm-pill"),
+    toast: mount.querySelector(".lm-toast"),
+    bubble: mount.querySelector(".lm-bubble"),
+    bubbleTitle: mount.querySelector(".lm-bubble-title"),
+    bubbleWave: mount.querySelector(".lm-bubble-wave"),
+    bubbleText: mount.querySelector(".lm-bubble-text"),
+    bubbleMain: mount.querySelector(".lm-bubble-main"),
+    bubbleClose: mount.querySelector(".lm-bubble-close"),
   };
 }

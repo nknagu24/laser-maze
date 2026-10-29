@@ -13,7 +13,8 @@
 
    Every beam carries a "power": 1 straight out of the laser, 0.5 after
    one splitter, 0.25 after two, and so on. Since Chapter 3 it also
-   carries a polarization, "pol" (see physics/pieces.js).
+   carries a polarization, "pol" (see physics/pieces.js), and since
+   Chapter 5 a list of colours (see physics/colour.js).
 
    Positions here are measured in "cells", not pixels:
      x = 0.5, y = 0.5 is the centre of the top-left cell,
@@ -23,6 +24,7 @@
 
 import { PIECES } from "./pieces.js";
 import { acceptedShare } from "./polarization.js";
+import { coloursOf, shareOf, ALL_COLOURS } from "./colour.js";
 
 
 /* How one step in each direction changes the row and column.
@@ -56,12 +58,14 @@ const FAINTEST = 0.01;
      detectorPower  how much light each detector counts, in the same
                     order as the level's detector list, e.g. [0.5, 0.25]
      arrived        how much light reached each detector before any
-                    polarization filtering (used for helpful messages)
+                    polarization or colour filtering (for helpful messages)
+     seen           which colours reached each detector (a Set each)
    --------------------------------------------------------------------- */
 export function traceBeam(level, pieces, rows, cols) {
   const segments = [];
   const detectorPower = level.detectors.map(() => 0);
   const arrived = level.detectors.map(() => 0);
+  const seen = level.detectors.map(() => new Set());
 
   // Every (cell, direction) a beam has already passed through. If a
   // beam arrives somewhere the same way a beam already did, its path
@@ -76,6 +80,7 @@ export function traceBeam(level, pieces, rows, cols) {
     direction: level.laser.facing,
     power: 1,
     pol: laserPolarization(level.laser),
+    colours: coloursOf(level.laser.color),
   }];
 
   let steps = 0;
@@ -83,8 +88,12 @@ export function traceBeam(level, pieces, rows, cols) {
   while (todo.length > 0 && steps < MAX_STEPS) {
     const beam = todo.shift();             // take the first beam on the list
     let { row, col, direction } = beam;
-    const { power, pol } = beam;
+    const { power, pol, colours } = beam;
     let start = { x: col + 0.5, y: row + 0.5 };
+
+    // A beam pushed sideways by calcite first steps sideways one cell,
+    // then turns back to its real direction ("then").
+    let then = beam.then || null;
 
     // Follow this one beam until it stops.
     while (steps < MAX_STEPS) {
@@ -103,7 +112,7 @@ export function traceBeam(level, pieces, rows, cols) {
           x: col + 0.5 + move.dCol * 0.5,
           y: row + 0.5 + move.dRow * 0.5,
         };
-        segments.push({ from: start, to: edge, power, pol });
+        segments.push({ from: start, to: edge, power, pol, colours });
         break;
       }
 
@@ -112,11 +121,19 @@ export function traceBeam(level, pieces, rows, cols) {
       col = nextCol;
       const centre = { x: col + 0.5, y: row + 0.5 };
 
+      // Finished the sideways step? Turn back to the real direction.
+      if (then) {
+        segments.push({ from: start, to: centre, power, pol, colours });
+        start = centre;
+        direction = then;
+        then = null;
+      }
+
       // Already been here, going this way, with this polarization?
       // Then stop (see "visited").
-      const key = `${row},${col},${direction},${pol}`;
+      const key = `${row},${col},${direction},${pol},${colours.join("+")}`;
       if (visited.has(key)) {
-        segments.push({ from: start, to: centre, power, pol });
+        segments.push({ from: start, to: centre, power, pol, colours });
         break;
       }
       visited.add(key);
@@ -125,9 +142,13 @@ export function traceBeam(level, pieces, rows, cols) {
       //    reading: all of it, or only the polarization it accepts.
       const detector = findAt(level.detectors, row, col);
       if (detector !== -1) {
-        segments.push({ from: start, to: centre, power, pol });
-        detectorPower[detector] += power * acceptedShare(level.detectors[detector], pol);
+        segments.push({ from: start, to: centre, power, pol, colours });
+        const d = level.detectors[detector];
+        // A coloured detector only counts its own colour.
+        const colourShare = d.color && d.color !== "white" ? shareOf(colours, [d.color]) : 1;
+        detectorPower[detector] += power * colourShare * acceptedShare(d, pol);
         arrived[detector] += power;
+        colours.forEach((c) => seen[detector].add(c));
         break;
       }
 
@@ -135,17 +156,25 @@ export function traceBeam(level, pieces, rows, cols) {
       const pieceIndex = findAt(pieces, row, col);
       if (pieceIndex !== -1) {
         const piece = pieces[pieceIndex];
-        const outputs = PIECES[piece.type].split(direction, piece.angle, pol);
+        const outputs = PIECES[piece.type].split(direction, piece.angle, { pol, colours });
 
         // The beam we were following ends here...
-        segments.push({ from: start, to: centre, power, pol });
+        segments.push({ from: start, to: centre, power, pol, colours });
 
         // ...and each output becomes a new beam on the to-do list,
         // starting from this cell, with its share of the power.
         for (const out of outputs) {
           const newPower = power * out.share;
           if (newPower >= FAINTEST) {
-            todo.push({ row, col, direction: out.direction, power: newPower, pol: out.pol });
+            todo.push({
+              row,
+              col,
+              direction: out.shift || out.direction,   // sideways first, if shifted
+              then: out.shift ? out.direction : null,
+              power: newPower,
+              pol: out.pol,
+              colours: out.colours || colours,
+            });
           }
         }
         break;
@@ -153,7 +182,7 @@ export function traceBeam(level, pieces, rows, cols) {
     }
   }
 
-  return { segments, detectorPower, arrived };
+  return { segments, detectorPower, arrived, seen };
 }
 
 
@@ -170,9 +199,11 @@ function laserPolarization(laser) {
 
 /* ---------------------------------------------------------------------
    Is a detector happy?
-     need: 0.5   it needs AT LEAST 50% of the laser's light
-     max: 0.5    it can take AT MOST 50% (a delicate sample)
-   Detectors with neither are happy with any light at all.
+     need: 0.5       it needs AT LEAST 50% of the laser's light
+     max: 0.5        it can take AT MOST 50% (a delicate sample)
+     color: "green"  it only counts green light
+     color: "white"  it needs red, green AND blue to arrive
+   Detectors with none of these are happy with any light at all.
    --------------------------------------------------------------------- */
 
 // The tiny 0.0001 forgives rounding, e.g. 0.25 + 0.25 + 0.5 = 0.99999…
@@ -190,13 +221,26 @@ export function hasTooMuch(detector, power) {
   return detector.max !== undefined && power - ROUNDING > detector.max;
 }
 
-export function isDetectorLit(detector, power) {
-  return hasEnough(detector, power) && !hasTooMuch(detector, power);
+/* For a white detector: which colours are still missing. */
+export function missingColours(detector, seenColours) {
+  if (detector.color !== "white") return [];
+  return ALL_COLOURS.filter((c) => !seenColours || !seenColours.has(c));
 }
 
-/* A level is solved when every one of its detectors is happy. */
-export function isSolved(level, detectorPower) {
-  return level.detectors.every((d, i) => isDetectorLit(d, detectorPower[i]));
+export function isDetectorLit(detector, power, seenColours) {
+  return (
+    hasEnough(detector, power) &&
+    !hasTooMuch(detector, power) &&
+    missingColours(detector, seenColours).length === 0
+  );
+}
+
+/* A level is solved when it has detectors and every one is happy. */
+export function isSolved(level, detectorPower, seen) {
+  return (
+    level.detectors.length > 0 &&
+    level.detectors.every((d, i) => isDetectorLit(d, detectorPower[i], seen && seen[i]))
+  );
 }
 
 

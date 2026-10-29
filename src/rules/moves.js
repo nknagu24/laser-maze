@@ -21,6 +21,37 @@ export function isTakenByLevel(level, row, col) {
   );
 }
 
+/* ---------------------------------------------------------------------
+   sandboxTap — the Sandbox's extra moves. Returns true if it handled
+   the tap:
+     • tapping the laser turns it a quarter turn clockwise
+     • tapping a detector removes it
+     • with "Detector" chosen, tapping an empty hole places one
+   --------------------------------------------------------------------- */
+const NEXT_FACING = { right: "down", down: "left", left: "up", up: "right" };
+
+function sandboxTap(level, row, col) {
+  if (level.laser.row === row && level.laser.col === col) {
+    level.laser.facing = NEXT_FACING[level.laser.facing];
+    return true;
+  }
+
+  const detector = findAt(level.detectors, row, col);
+  if (detector !== -1) {
+    level.detectors.splice(detector, 1);
+    return true;
+  }
+
+  if (state.selected === "detector") {
+    const free = findAt(state.placed, row, col) === -1 && !isTakenByLevel(level, row, col);
+    if (free) level.detectors.push({ row, col });
+    return true;
+  }
+
+  return false;
+}
+
+
 /* How many of this piece type are still in the tray? */
 export function piecesLeft(level, type) {
   const given = level.tray[type] || 0;
@@ -34,6 +65,9 @@ export function piecesLeft(level, type) {
      • an empty hole  → place the selected tray piece there
      • anything else  → nothing */
 export function handleTap(level, row, col) {
+  // Sandbox extras: turn the laser, and place or remove detectors.
+  if (level.sandbox && sandboxTap(level, row, col)) return;
+
   const index = findAt(state.placed, row, col);
 
   if (index !== -1) {

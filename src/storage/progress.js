@@ -8,7 +8,10 @@
    What is saved:
      stars      the best stars earned on each level, by level name,
                 e.g. { "First Bounce": 3, "Periscope": 2 }
-     lastLevel  the level they were on, so they can pick up again
+     lastLevel  the name of the level they were on, so they can pick
+                up again (older saves stored its number instead)
+     opened     names of levels opened with "Jump to a chapter", so
+                they stay open even before earlier levels are solved
 
    Every read and write is wrapped in try { } catch { } because some
    browsers block storage (private windows, strict privacy settings).
@@ -25,12 +28,13 @@ export function loadProgress() {
       return {
         stars: saved.stars || {},
         lastLevel: saved.lastLevel || 0,
+        opened: saved.opened || [],
       };
     }
   } catch {
     // Storage blocked or the saved text was damaged: start fresh.
   }
-  return { stars: {}, lastLevel: 0 };
+  return { stars: {}, lastLevel: 0, opened: [] };
 }
 
 /* Write progress to the browser's storage. */

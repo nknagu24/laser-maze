@@ -11,6 +11,7 @@
 import { SETTINGS } from "../settings.js";
 import { line } from "./canvas.js";
 import { drawPolBadge } from "./symbols.js";
+import { drawColour } from "../physics/colour.js";
 
 
 /* The optical table and its screw holes, rows × cols cells big. */
@@ -72,25 +73,31 @@ export function drawHover(ctx, cell, hover) {
 
    Polarized beams also get small ticks showing their polarization,
    one on every border between cells (see drawPolarizationTicks). */
-export function drawBeam(ctx, cell, segments) {
+export function drawBeam(ctx, cell, segments, showPolarization = true) {
   const c = SETTINGS.colors;
+  // Each layer: how wide, how blurred, how see-through, and whether it
+  // uses the beam's own colour or the bright core colour.
   const layers = [
-    { color: c.beamGlow, width: 0.22, blur: 0.4 },
-    { color: c.beam,     width: 0.06, blur: 0 },
-    { color: c.beamCore, width: 0.02, blur: 0 },
+    { width: 0.22, blur: 0.4, alpha: 0.45, core: false },   // glow
+    { width: 0.06, blur: 0,   alpha: 1,    core: false },   // beam
+    { width: 0.02, blur: 0,   alpha: 1,    core: true },    // bright centre
   ];
 
   ctx.save();
   ctx.lineCap = "round";
   for (const layer of layers) {
-    ctx.strokeStyle = layer.color;
     ctx.lineWidth = cell * layer.width;
-    ctx.shadowColor = c.beam;
     ctx.shadowBlur = cell * layer.blur;
     for (const seg of segments) {
+      // The beam's colour: red for a red laser, mixed for several
+      // colours together (see physics/colour.js).
+      const colour = seg.colours ? drawColour(seg.colours) : c.beam;
+      ctx.strokeStyle = layer.core ? c.beamCore : colour;
+      ctx.shadowColor = colour;
+
       // Brightness: full power → fully opaque; weaker → more see-through,
       // but never fainter than 30% so every beam stays visible.
-      ctx.globalAlpha = 0.3 + 0.7 * seg.power;
+      ctx.globalAlpha = (0.3 + 0.7 * seg.power) * layer.alpha;
 
       // Segments are in cell units; multiply by cell to get pixels.
       line(ctx, seg.from.x * cell, seg.from.y * cell,
@@ -99,7 +106,7 @@ export function drawBeam(ctx, cell, segments) {
   }
   ctx.restore();
 
-  drawPolarizationTicks(ctx, cell, segments);
+  if (showPolarization) drawPolarizationTicks(ctx, cell, segments);
 }
 
 
