@@ -1,0 +1,91 @@
+/* =====================================================================
+   LASER MAZE — styles/levels.css
+   The level-select screen.
+   ===================================================================== */
+
+/* ---------- Level select (shown in place of the board) ---------- */
+
+.lm-levels {
+  padding: 4px 4px 8px;
+}
+
+/* "Chapter 1: Reflection" */
+.lm-chapter {
+  margin: 8px 0 10px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+}
+
+/* The grid of level buttons: as many 64px columns as fit */
+.lm-level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+/* One level button: big number, stars underneath */
+.lm-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  color: var(--text, #222222);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--lm-accent) 45%, transparent);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.lm-pick:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--lm-accent) 12%, transparent);
+}
+
+.lm-pick.lm-current {
+  border-width: 2px;
+  border-color: var(--lm-accent);
+}
+
+.lm-pick:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.lm-pick-number {
+  font-family: "Silkscreen", "Space Mono", monospace;
+  font-size: 1.2rem;
+  color: var(--lm-accent);
+}
+
+.lm-pick-stars {
+  font-family: "Space Mono", monospace;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+/* "Back to start screen" — deliberately quiet, like a small link */
+.lm-home {
+  display: block;
+  margin: 0 auto;
+  font-family: "Space Mono", monospace;
+  font-size: 0.75rem;
+  color: var(--text, #222222);
+  opacity: 0.6;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.lm-home:hover {
+  opacity: 1;
+}
+
+/* Visible outline when using the keyboard (Tab key) */
+.lm-pick:focus-visible,
+.lm-home:focus-visible {
+  outline: 2px solid var(--lm-accent);
+  outline-offset: 2px;
+}

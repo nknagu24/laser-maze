@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laser Maze (test page)</title>
+
+  <!-- The same fonts your site loads, so testing looks the same -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    /* Stand-ins for your site's colour variables (TEST PAGE ONLY).
+       They're close to your site's colours, not exact — that's fine. */
+    :root {
+      --bg: #f6f1e7;
+      --surface: #ffffff;
+      --text: #2b2b2b;
+      --section-accent: #7a5a9a;   /* Physics violet */
+    }
+    :root[data-theme="dark"] {
+      --bg: #16161a;
+      --surface: #22222a;
+      --text: #e8e4dc;
+      --section-accent: #a98bc9;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, serif;
+    }
+
+    .dev-toggle {
+      font-family: "Space Mono", monospace;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Flips between light and dark, like your site's pebble toggle -->
+  <button class="dev-toggle" onclick="
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  ">Toggle dark mode</button>
+
+  <!-- The same kind of box your utility.html layout creates -->
+  <div data-tool="laser-maze"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

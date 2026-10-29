@@ -1,0 +1,26 @@
+/* =====================================================================
+   LASER MAZE — styles/card.css
+   The game card itself, shared by every screen. Uses your site's own
+   colour variables, so light and dark mode work automatically.
+   ===================================================================== */
+
+/* The whole game card */
+.lm-game {
+  /* Physics violet; falls back to #7a5a9a if the page has no accent */
+  --lm-accent: var(--section-accent, #7a5a9a);
+  --lm-success: #2f9e5f;    /* green for "solved" text */
+
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 16px;
+  background: var(--surface, #ffffff);
+  color: var(--text, #222222);
+  border: 1px solid color-mix(in srgb, var(--lm-accent) 35%, transparent);
+  border-radius: 14px;
+}
+
+/* Only one screen shows at a time; main.js hides the others with the
+   "hidden" attribute. This rule makes sure nothing overrides that. */
+.lm-game [hidden] {
+  display: none !important;
+}

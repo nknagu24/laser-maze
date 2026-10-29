@@ -1,0 +1,130 @@
+/* =====================================================================
+   LASER MAZE — styles/board.css
+   The board screen: the board, the tray, Reset and Home, and the
+   text underneath. (The board's picture is drawn by the drawing/
+   files; this only styles what's around it.)
+   ===================================================================== */
+
+/* ---------- The board ---------- */
+.lm-board-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.lm-board {
+  display: block;
+  border-radius: 10px;
+  touch-action: manipulation;   /* quick taps on phones, no double-tap zoom */
+}
+
+/* ---------- The tray under the board: [Mirror × 2]      [Reset] ---------- */
+.lm-tray-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;          /* lets it stack on narrow phones */
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.lm-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Shared look for tray pieces and the Reset button */
+.lm-piece,
+.lm-reset {
+  font-family: "Space Mono", monospace;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  color: var(--text, #222222);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--lm-accent) 45%, transparent);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.lm-piece:hover,
+.lm-reset:hover {
+  background: color-mix(in srgb, var(--lm-accent) 12%, transparent);
+}
+
+/* The tray piece that is currently chosen */
+.lm-piece.lm-selected {
+  color: #ffffff;
+  background: var(--lm-accent);
+  border-color: var(--lm-accent);
+}
+
+/* ---------- Reset and Home, side by side on the right ---------- */
+.lm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* The Home button: same look as Reset, with a house icon instead of
+   a word. "currentColor" in the icon makes it follow this text colour,
+   so it switches automatically in dark mode. */
+.lm-to-start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  color: var(--text, #222222);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--lm-accent) 45%, transparent);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.lm-to-start:hover {
+  background: color-mix(in srgb, var(--lm-accent) 12%, transparent);
+}
+
+.lm-to-start:focus-visible {
+  outline: 2px solid var(--lm-accent);
+  outline-offset: 2px;
+}
+
+/* Visible outline when using the keyboard (Tab key) */
+.lm-piece:focus-visible,
+.lm-reset:focus-visible {
+  outline: 2px solid var(--lm-accent);
+  outline-offset: 2px;
+}
+
+/* "Tap an empty hole to place a mirror…" */
+.lm-hint {
+  margin: 8px 0 0;
+  font-family: "Space Mono", monospace;
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+/* ---------- Text under everything ---------- */
+
+/* "The detector is still dark." / "★★★ Solved with 1 piece." */
+.lm-status {
+  margin: 16px 0 4px;
+  text-align: center;
+  font-family: "Space Mono", monospace;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.lm-status.lm-solved {
+  color: var(--lm-success);
+  opacity: 1;
+}
+
+/* The short physics note under the board */
+.lm-note {
+  margin: 0;
+  text-align: center;
+  font-family: "Crimson Pro", Georgia, serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  opacity: 0.8;
+}

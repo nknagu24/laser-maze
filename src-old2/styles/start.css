@@ -1,0 +1,127 @@
+/* =====================================================================
+   LASER MAZE — styles/start.css
+   The start screen: title, picture, introduction, buttons and the
+   note for young physicists.
+   ===================================================================== */
+
+/* ---------- Start screen ---------- */
+.lm-start {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+/* "Laser Maze" */
+.lm-title {
+  margin: 4px 0 16px;
+  font-family: "Silkscreen", "Space Mono", monospace;
+  font-size: clamp(1.8rem, 6vw, 2.6rem);   /* grows with the screen, within limits */
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: var(--lm-accent);
+}
+
+/* The little optical table picture */
+.lm-hero {
+  display: block;
+  margin: 0 auto 18px;
+  border-radius: 10px;
+}
+
+.lm-intro {
+  max-width: 34em;
+  margin: 0 auto 10px;
+  font-family: "Crimson Pro", Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.55;
+}
+
+.lm-howto {
+  max-width: 34em;
+  margin: 0 auto 20px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  opacity: 0.75;
+}
+
+/* Continue + New game, side by side (stacked on narrow phones) */
+.lm-start-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.lm-continue,
+.lm-new {
+  font-family: "Space Mono", monospace;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Continue is the main action: filled with the accent colour */
+.lm-continue {
+  color: #ffffff;
+  background: var(--lm-accent);
+  border: 1px solid var(--lm-accent);
+}
+
+.lm-continue:hover {
+  filter: brightness(1.1);
+}
+
+/* New game: outlined. (When there's nothing to continue, it's the
+   only button, so it gets the filled look instead — see below.) */
+.lm-new {
+  color: var(--lm-accent);
+  background: transparent;
+  border: 1px solid var(--lm-accent);
+}
+
+.lm-new:hover {
+  background: color-mix(in srgb, var(--lm-accent) 12%, transparent);
+}
+
+.lm-continue[hidden] + .lm-new {
+  color: #ffffff;
+  background: var(--lm-accent);
+}
+
+/* The note for young learners */
+.lm-disclaimer {
+  max-width: 34em;
+  margin: 0 auto;
+  padding: 12px 16px;
+  text-align: left;
+  font-family: "Crimson Pro", Georgia, serif;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--lm-accent) 7%, transparent);
+  border-left: 3px solid var(--lm-accent);
+  border-radius: 6px;
+}
+
+.lm-disclaimer p {
+  margin: 0 0 8px;
+}
+
+.lm-disclaimer p:last-child {
+  margin-bottom: 0;
+}
+
+.lm-disclaimer-title {
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--lm-accent);
+}
+
+/* Visible outline when using the keyboard (Tab key) */
+.lm-continue:focus-visible,
+.lm-new:focus-visible {
+  outline: 2px solid var(--lm-accent);
+  outline-offset: 2px;
+}
