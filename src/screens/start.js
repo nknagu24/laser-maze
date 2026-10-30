@@ -16,10 +16,14 @@ import { hasProgress, continueLevel, levelLabel, chapterStarts } from "../rules/
 export function renderStart(ui) {
   drawHero(ui.hero);
 
-  // Show only the current view.
+  // Show only the current view, and the Home button everywhere except
+  // the main menu itself.
   ui.startViews.forEach((view) => {
     view.hidden = view.dataset.view !== state.startView;
   });
+  // "visibility" (not "hidden") keeps its space, so the title doesn't
+  // jump sideways when Home appears.
+  ui.startHome.style.visibility = state.startView === "menu" ? "hidden" : "visible";
 
   // Story mode: show Continue if they've played before, or have just
   // come back from a level during this visit.

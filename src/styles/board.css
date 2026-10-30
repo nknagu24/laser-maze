@@ -200,3 +200,74 @@
   outline: 2px solid var(--lm-accent);
   outline-offset: 2px;
 }
+
+
+/* ---------- Compact tray on phones ----------
+   When the game card is narrower than 700px, the optic cards shrink
+   to just their picture, so the tray stays short even with many
+   optics (the Sandbox has 13). The CHOSEN card also shows its name,
+   so tapping a picture tells you what it is. The count moves to a
+   small badge on the picture's corner. */
+@container (max-width: 699px) {
+  .lm-tray {
+    gap: 9px;
+  }
+
+  .lm-piece {
+    position: relative;     /* lets the count badge sit on its corner */
+    gap: 6px;
+    padding: 5px;
+  }
+
+  /* Names hidden… */
+  .lm-piece-name {
+    display: none;
+  }
+
+  /* …except on the chosen card */
+  .lm-piece.lm-selected {
+    padding-right: 12px;
+  }
+
+  .lm-piece.lm-selected .lm-piece-name {
+    display: inline;
+    font-size: 0.78rem;
+    animation: lm-name-in 0.2s ease-out;
+  }
+
+  /* "×2" as a small badge on the bottom-left corner */
+  .lm-piece-count {
+    position: absolute;
+    left: -6px;
+    bottom: -6px;
+    padding: 0 5px;
+    font-size: 0.65rem;
+    line-height: 1.5;
+    color: var(--text, #222222);
+    background: var(--surface, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--lm-accent) 55%, transparent);
+  }
+
+  .lm-piece.lm-selected .lm-piece-count {
+    color: var(--text, #222222);
+    background: var(--surface, #ffffff);
+  }
+
+  /* A slightly smaller i */
+  .lm-piece-info {
+    top: -7px;
+    right: -7px;
+    width: 19px;
+    height: 19px;
+    font-size: 0.7rem;
+  }
+}
+
+@keyframes lm-name-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lm-piece.lm-selected .lm-piece-name { animation: none; }
+}

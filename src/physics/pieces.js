@@ -12,6 +12,8 @@
      label   its name in the tray
      short   its name printed on the table
      about   the explanation shown by the small ⓘ on its tray button
+     more    (optional) a longer explanation behind a "Learn more"
+             button in that bubble; a blank line starts a new paragraph
      wave    (optional) an animated wave for that explanation,
              see drawing/wave.js
 
@@ -36,6 +38,10 @@ import {
   reflectPol, throughPolarizer, halfWave, quarterWave,
 } from "./polarization.js";
 import { ALL_COLOURS } from "./colour.js";
+
+
+/* The "Learn more" text shared by every dye. */
+const DYE_MORE = "How it works: the dye's molecules swallow light of some colours, and a moment later give the energy back as light of a lower-energy, redder colour. That's why you can judge what light will make a dye glow just by looking at its colour: it absorbs the colours it doesn't show you.\n\nYou've seen this without realising it:\n\nRubies glow deep red under green or blue light. The very first laser, built in 1960, was a ruby crystal.\n\nHighlighter pens look so bright because they also turn invisible ultraviolet into visible colour.\n\nWhite shirts and paper glow blue under a black light, thanks to brighteners added to make them look whiter.\n\nTonic water glows blue under ultraviolet light, and the gem fluorite glows so well that fluorescence was named after it.";
 
 
 export const PIECES = {
@@ -78,12 +84,32 @@ export const PIECES = {
     short: "Polarizer",
     about: "A polarizer only lets through the part of the light wiggling along its lines (its axis). What comes out is polarized along the axis, with cos² of the angle difference of its power. Tap it to turn it in 45° steps.",
     wave: { input: 45, element: { type: "polarizer", angle: 0 } },
+    more: "You use polarizers every day without noticing.\n\nPolarized sunglasses cut glare: light reflected off water, wet roads and car bonnets is mostly horizontally polarized, so a vertical polarizer blocks it.\n\nPhone and laptop screens (LCDs) have a polarizer on the front. Look at one through polarized sunglasses and tilt your head: the screen can go dark!\n\n3D cinema glasses use polarization to send a different picture to each eye.",
     angles: [0, 45, 90, 135],
 
     // Only lets through the part of the wave wiggling along its axis
     // (Malus's law). What comes out is polarized along the axis.
     split(direction, angle, { pol }) {
       return [{ direction, share: throughPolarizer(pol, angle), pol: angle }];
+    },
+  },
+
+  wollaston: {
+    label: "Wollaston prism",
+    short: "Wollaston",
+    about: "A Wollaston prism is two wedges of birefringent crystal glued together. It splits light into its horizontal and vertical parts and sends them off in two different directions, so neither goes straight on. Invented by William Hyde Wollaston in the early 1800s.",
+    angles: [45, 135],   // which side the horizontal part goes to
+
+    // Horizontal part to one side, vertical part to the other. How much
+    // goes each way is the same as through a horizontal or vertical
+    // polarizer (so diagonal, circular or unpolarized light: half each).
+    split(direction, angle, { pol }) {
+      const flatSide = angle === 45 ? LEFT_OF[direction] : RIGHT_OF[direction];
+      const uprightSide = angle === 45 ? RIGHT_OF[direction] : LEFT_OF[direction];
+      return [
+        { direction: flatSide, share: throughPolarizer(pol, 0), pol: 0 },
+        { direction: uprightSide, share: throughPolarizer(pol, 90), pol: 90 },
+      ];
     },
   },
 
@@ -171,26 +197,25 @@ export const PIECES = {
     },
   },
 
-  dye: {
-    label: "Fluorescent dye",
-    short: "Dye",
-    about: "A fluorescent dye soaks up blue light and glows green, sending the glow out in every direction. Green light carries less energy than blue, so the dye can turn blue into green, but never green into blue.",
-    angles: [0],
+  /* Fluorescent dyes. Each one absorbs some colours and glows in
+     another, always a "redder" one (lower energy). The colour a dye
+     LOOKS tells you what it absorbs: it looks like the colours it
+     doesn't soak up. See makeDye below. */
+  dye: makeDye({
+    label: "Yellow dye",
+    looks: "#d9f23a",
+    absorbs: ["blue"],
+    glows: "green",
+    about: "This dye looks yellow because it soaks up blue light (yellow is what's left of white light without the blue). Blue light makes it glow green, in every direction. Green or red light can't: they don't carry enough energy.",
+  }),
 
-    // Only the blue part makes it glow; everything else is absorbed.
-    // The green glow goes out on all four sides, a quarter each, and is
-    // unpolarized (the dye forgets the light's polarization).
-    split(direction, angle, { colours }) {
-      if (!colours.includes("blue")) return [];
-      const blue = 1 / colours.length;
-      return ["up", "down", "left", "right"].map((d) => ({
-        direction: d,
-        share: blue / 4,
-        pol: null,
-        colours: ["green"],
-      }));
-    },
-  },
+  "dye-orange": makeDye({
+    label: "Orange dye",
+    looks: "#ff9a2e",
+    absorbs: ["blue", "green"],
+    glows: "red",
+    about: "This dye looks orange because it soaks up blue and green light. Either one makes it glow red, in every direction. Red light can't make it glow: it doesn't carry enough energy.",
+  }),
 };
 
 
@@ -248,3 +273,36 @@ function reflect(direction, angle) {
    (A beam going right has "up" on its left.) */
 const LEFT_OF = { right: "up", up: "left", left: "down", down: "right" };
 const RIGHT_OF = { right: "down", down: "left", left: "up", up: "right" };
+
+
+
+/* ---------------------------------------------------------------------
+   makeDye — builds a fluorescent dye piece.
+     looks     the colour it's drawn in
+     absorbs   the colours that make it glow
+     glows     the colour of its glow
+   The glow goes out on all four sides, a quarter each, and is
+   unpolarized (the dye forgets the light's polarization). Colours it
+   doesn't absorb are simply stopped.
+   --------------------------------------------------------------------- */
+function makeDye({ label, looks, absorbs, glows, about }) {
+  return {
+    label,
+    short: "Dye",
+    looks,
+    about,
+    more: DYE_MORE,
+    angles: [0],
+
+    split(direction, angle, { colours }) {
+      const absorbed = colours.filter((c) => absorbs.includes(c)).length / colours.length;
+      if (absorbed === 0) return [];
+      return ["up", "down", "left", "right"].map((d) => ({
+        direction: d,
+        share: absorbed / 4,
+        pol: null,
+        colours: [glows],
+      }));
+    },
+  };
+}

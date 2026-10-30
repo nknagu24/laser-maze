@@ -18,7 +18,22 @@ export function buildFrame(mount) {
 
       <!-- ===== Screen 1: start ===== -->
       <section class="lm-start">
-        <h2 class="lm-title">Laser Maze</h2>
+        <!-- Header row: Home on the left, the title in the middle, and an
+             empty space on the right the same size as Home, so the title
+             stays truly centred. Home is shown in Story mode and the
+             chapter list (just invisible on the menu itself). -->
+        <div class="lm-start-header">
+          <button class="lm-nav lm-start-home" data-go="menu" aria-label="Back to the main menu" title="Main menu">
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"
+                 fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 11 12 3l9 8" />
+              <path d="M5 10v10h5v-6h4v6h5V10" />
+            </svg>
+          </button>
+          <h2 class="lm-title">Laser Maze</h2>
+          <span class="lm-start-spacer" aria-hidden="true"></span>
+        </div>
         <canvas class="lm-hero" aria-hidden="true"></canvas>
 
         <p class="lm-intro">
@@ -42,19 +57,26 @@ export function buildFrame(mount) {
             <button class="lm-continue"></button>
             <button class="lm-new">New game</button>
           </div>
-          <button class="lm-back" data-go="menu">‹ Back</button>
         </div>
 
         <!-- View 3: Jump to a chapter (the list is filled in by screens/start.js) -->
         <div class="lm-view" data-view="chapters" hidden>
           <p class="lm-view-title">Jump to a chapter</p>
           <div class="lm-chapter-list"></div>
-          <button class="lm-back" data-go="menu">‹ Back</button>
         </div>
       </section>
 
       <!-- ===== The bar above the board (board and levels screens) ===== -->
       <div class="lm-bar">
+        <!-- Home: back to the start screen -->
+        <button class="lm-nav lm-to-start" aria-label="Back to start screen" title="Back to start screen">
+          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10h5v-6h4v6h5V10" />
+          </svg>
+        </button>
         <button class="lm-nav" data-move="-1" aria-label="Previous level">‹</button>
         <button class="lm-level" aria-expanded="false" title="Choose a level"></button>
         <button class="lm-nav" data-move="1" aria-label="Next level">›</button>
@@ -87,6 +109,8 @@ export function buildFrame(mount) {
               <p class="lm-bubble-title" hidden></p>
               <canvas class="lm-bubble-wave" aria-hidden="true" hidden></canvas>
               <p class="lm-bubble-text"></p>
+              <p class="lm-bubble-extra" hidden></p>
+              <button class="lm-bubble-more" data-action="more" hidden></button>
               <button class="lm-bubble-main"></button>
             </div>
 
@@ -99,15 +123,41 @@ export function buildFrame(mount) {
                 <button data-value="blue">Blue</button>
                 <button data-value="white">White</button>
               </div>
-              <p class="lm-sandbox-title">Laser polarization</p>
+              <p class="lm-sandbox-title">
+                Laser polarization
+                <button class="lm-setting-info" data-info="polarization"
+                        aria-label="About polarization" title="About polarization">i</button>
+              </p>
+              <!-- Each choice has its own small i, like the optic cards. -->
               <div class="lm-chips" data-setting="polarization">
-                <button data-value="0" title="Flat">—</button>
-                <button data-value="45" title="Diagonal">/</button>
-                <button data-value="90" title="Upright">|</button>
-                <button data-value="135" title="Diagonal">\</button>
-                <button data-value="R" title="Right-handed circular">R</button>
-                <button data-value="L" title="Left-handed circular">L</button>
-                <button data-value="none" title="Unpolarized">none</button>
+                <span class="lm-chip">
+                  <button data-value="0" title="Horizontal">H</button>
+                  <button class="lm-chip-info" data-info="pol-0" aria-label="About horizontal light" title="About horizontal light">i</button>
+                </span>
+                <span class="lm-chip">
+                  <button data-value="90" title="Vertical">V</button>
+                  <button class="lm-chip-info" data-info="pol-90" aria-label="About vertical light" title="About vertical light">i</button>
+                </span>
+                <span class="lm-chip">
+                  <button data-value="45" title="Diagonal">D</button>
+                  <button class="lm-chip-info" data-info="pol-45" aria-label="About diagonal light" title="About diagonal light">i</button>
+                </span>
+                <span class="lm-chip">
+                  <button data-value="135" title="Anti-diagonal">A</button>
+                  <button class="lm-chip-info" data-info="pol-135" aria-label="About anti-diagonal light" title="About anti-diagonal light">i</button>
+                </span>
+                <span class="lm-chip">
+                  <button data-value="R" title="Right circular">R</button>
+                  <button class="lm-chip-info" data-info="pol-R" aria-label="About right circular light" title="About right circular light">i</button>
+                </span>
+                <span class="lm-chip">
+                  <button data-value="L" title="Left circular">L</button>
+                  <button class="lm-chip-info" data-info="pol-L" aria-label="About left circular light" title="About left circular light">i</button>
+                </span>
+                <span class="lm-chip">
+                  <button data-value="none" title="Unpolarized">none</button>
+                  <button class="lm-chip-info" data-info="pol-none" aria-label="About unpolarized light" title="About unpolarized light">i</button>
+                </span>
               </div>
             </div>
           </aside>
@@ -130,15 +180,6 @@ export function buildFrame(mount) {
                 <path d="M12 7.5v.01" />
               </svg>
             </button>
-            <button class="lm-icon lm-to-start" aria-label="Back to start screen" title="Back to start screen">
-              <!-- a small house -->
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
-                   fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 11 12 3l9 8" />
-                <path d="M5 10v10h5v-6h4v6h5V10" />
-              </svg>
-            </button>
           </div>
         </div>
       </div>
@@ -154,6 +195,7 @@ export function buildFrame(mount) {
     start: mount.querySelector(".lm-start"),
     hero: mount.querySelector(".lm-hero"),
     startViews: mount.querySelectorAll(".lm-view"),
+    startHome: mount.querySelector(".lm-start-home"),
     chapterList: mount.querySelector(".lm-chapter-list"),
     continueButton: mount.querySelector(".lm-continue"),
     newButton: mount.querySelector(".lm-new"),
@@ -181,6 +223,8 @@ export function buildFrame(mount) {
     bubbleTitle: mount.querySelector(".lm-bubble-title"),
     bubbleWave: mount.querySelector(".lm-bubble-wave"),
     bubbleText: mount.querySelector(".lm-bubble-text"),
+    bubbleExtra: mount.querySelector(".lm-bubble-extra"),
+    bubbleMore: mount.querySelector(".lm-bubble-more"),
     bubbleMain: mount.querySelector(".lm-bubble-main"),
     bubbleClose: mount.querySelector(".lm-bubble-close"),
   };

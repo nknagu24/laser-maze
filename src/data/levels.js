@@ -43,8 +43,9 @@
    Every level needs its own unique name: saved stars are stored under
    the name, so renaming a level resets its stars for visitors.
 
-   Piece types: "mirror", "splitter", "polarizer", "halfwave",
-   "quarterwave", "pbs", "displacer", "prism", "dye", "dichroic-red",
+   Piece types: "mirror", "splitter", "polarizer", "wollaston",
+   "halfwave", "quarterwave", "pbs", "displacer", "prism", "dye"
+   (yellow, glows green), "dye-orange" (glows red), "dichroic-red",
    "dichroic-green" and "dichroic-blue" (see physics/pieces.js).
    In a tray, names with a dash need quotes: { "dichroic-green": 1 }.
    Angles: 0 looks like  —   45 like  /   90 like  |   135 like  \
@@ -131,7 +132,7 @@ export const LEVELS = [
         next: "Next",
       },
       {
-        say: "Tap \"Beam splitter\" in the tray to choose it.",
+        say: "Tap the glowing Beam splitter card in the tray to choose it.",
         select: "splitter",
       },
       {
@@ -321,6 +322,16 @@ export const LEVELS = [
     note: "Each detector hides behind its own polarizer, one flat and one upright. Polarizers used this way are called analyzers: they let a detector measure only one polarization.",
   },
   {
+    name: "Fork in the Road",
+    chapter: 3,
+    laser: { row: 3, col: 0, facing: "right", polarization: "none" },
+    detectors: [{ row: 0, col: 4, accepts: 90, need: 0.5 }, { row: 7, col: 4, accepts: 0, need: 0.5 }],
+    walls: [],
+    tray: { wollaston: 1, polarizer: 1 },
+    par: 1,
+    note: "A Wollaston prism splits light by polarization and sends both parts off at an angle, one each way. Astronomers use them to measure the polarization of starlight.",
+  },
+  {
     name: "Exact Dose",
     chapter: 3,
     laser: { row: 6, col: 0, facing: "right" },
@@ -356,7 +367,7 @@ export const LEVELS = [
         next: "Next",
       },
       {
-        say: "This detector only counts right-handed (R) light. Choose the quarter-wave plate in the tray.",
+        say: "This detector only counts right-handed (R) light. Tap the glowing quarter-wave plate card in the tray.",
         select: "quarterwave",
       },
       {
@@ -548,6 +559,16 @@ export const LEVELS = [
     tray: { dye: 1, mirror: 2 },
     par: 1,
     note: "The dye absorbs blue light and glows green in every direction. This is fluorescence: highlighter pens and glow sticks work the same way.",
+  },
+  {
+    name: "Which Dye?",
+    chapter: 5,
+    laser: { row: 3, col: 0, facing: "right", color: "green" },
+    detectors: [{ row: 0, col: 5, color: "red", need: 0.25 }],
+    walls: [],
+    tray: { dye: 1, "dye-orange": 1, mirror: 1 },
+    par: 1,
+    note: "You can tell which light will make a dye glow from its colour: it absorbs the colours it doesn't show. The orange dye soaks up green; the yellow one doesn't.",
   },
   {
     name: "White Again",

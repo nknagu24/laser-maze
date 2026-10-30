@@ -20,7 +20,7 @@ import { state } from "./state.js";
 import { buildFrame } from "./frame.js";
 import { saveProgress, clearProgress, loadProgress } from "./storage/progress.js";
 import { handleTap, isTakenByLevel } from "./rules/moves.js";
-import { isUnlocked, hasProgress, continueLevel, openLevel } from "./rules/scoring.js";
+import { isUnlocked, hasProgress, continueLevel } from "./rules/scoring.js";
 import { currentLevel, inSandbox, nextLevelIndex, previousLevelIndex } from "./rules/current.js";
 import { freshSandbox } from "./data/sandbox.js";
 import {
@@ -166,9 +166,12 @@ export function startGame(mount) {
     state.winClosed = false;
     state.toast = "";
 
-    // Remember where the visitor is, for their next visit.
-    state.progress.lastLevel = level.name;
-    saveProgress(state.progress);
+    // Remember where the visitor is in Story mode, for "Continue".
+    // (Levels played from "Jump to a chapter" don't move that place.)
+    if (!state.freePlay) {
+      state.progress.lastLevel = level.name;
+      saveProgress(state.progress);
+    }
 
     buildTray(ui, level);
     redraw();
@@ -291,6 +294,8 @@ export function startGame(mount) {
     } else if (action === "next-level") {
       loadLevel(nextLevelIndex());
       return;
+    } else if (action === "more") {
+      state.moreOpen = !state.moreOpen;   // open or close "Learn more"
     } else if (action === "close") {
       // Close whichever bubble is showing.
       if (ui.bubble.dataset.kind === "win") state.winClosed = true;
@@ -313,6 +318,7 @@ export function startGame(mount) {
     if (info) {
       const type = info.dataset.info;
       state.pieceInfo = state.pieceInfo === type ? null : type;   // tap again to close
+      state.moreOpen = false;
       redraw();
       return;
     }
@@ -338,6 +344,15 @@ export function startGame(mount) {
 
   // Sandbox: the laser's colour and polarization buttons.
   ui.sandboxBox.addEventListener("click", (event) => {
+    // The small i beside "Laser polarization": explain polarization.
+    const info = event.target.closest("[data-info]");
+    if (info) {
+      state.pieceInfo = state.pieceInfo === info.dataset.info ? null : info.dataset.info;
+      state.moreOpen = false;
+      redraw();
+      return;
+    }
+
     const button = event.target.closest("button[data-value]");
     if (!button || !inSandbox()) return;
     const setting = button.closest(".lm-chips").dataset.setting;   // "color" or "polarization"
@@ -425,13 +440,12 @@ export function startGame(mount) {
     }
 
     // Jump to a chapter: each button carries the level to start at,
-    // and whether to keep the guided levels.
+    // and whether to keep the guided levels. Every level is open here.
     const jump = event.target.closest("[data-start]");
     if (jump) {
-      const index = Number(jump.dataset.start);
+      state.freePlay = true;
       state.skipGuides = jump.dataset.guides === "no";
-      openLevel(index);   // keep it open from now on
-      loadLevel(index);
+      loadLevel(Number(jump.dataset.start));
     }
   });
 
@@ -439,8 +453,10 @@ export function startGame(mount) {
   // stepped out to the start screen during this visit, go straight back
   // to the board with their pieces still in place.
   ui.continueButton.addEventListener("click", () => {
+    const wasFreePlay = state.freePlay;
+    state.freePlay = false;
     state.skipGuides = false;
-    if (state.played && state.mode === "story" && state.levelIndex === continueLevel()) {
+    if (state.played && !wasFreePlay && state.mode === "story" && state.levelIndex === continueLevel()) {
       showScreen("board");
     } else {
       loadLevel(continueLevel());
@@ -456,6 +472,7 @@ export function startGame(mount) {
       clearProgress();
       state.progress = loadProgress();
     }
+    state.freePlay = false;
     state.skipGuides = false;
     loadLevel(0);
   });

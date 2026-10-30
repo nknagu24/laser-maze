@@ -77,32 +77,22 @@ export function recordStars(index, stars) {
 }
 
 /* Which levels can be played:
+     • after "Jump to a chapter", every level is open (free play)
      • the Training levels (chapter 0) are always open
      • a level the player has already solved stays open
-     • a level opened with "Jump to a chapter" stays open
-     • any other level opens once the last ordinary (non-guided) level
-       before it is solved. Guides are optional: skipping one never
-       locks what comes after it. */
+     • in Story mode, any other level opens once the last ordinary
+       (non-guided) level before it is solved. Guides are optional:
+       skipping one never locks what comes after it. */
 export function isUnlocked(index) {
+  if (state.freePlay) return true;
   if (isWarmUp(index)) return true;
   if (bestStars(index) > 0) return true;
-  if ((state.progress.opened || []).includes(LEVELS[index].name)) return true;
 
   for (let i = index - 1; i >= 0; i--) {
     if (!isTraining(i)) return bestStars(i) > 0;   // the last ordinary level
   }
   return true;   // nothing ordinary before it (Level 1)
 }
-
-/* Opens a level for good (used by "Jump to a chapter"). */
-export function openLevel(index) {
-  const name = LEVELS[index].name;
-  if (!state.progress.opened.includes(name)) {
-    state.progress.opened.push(name);
-    saveProgress(state.progress);
-  }
-}
-
 
 /* ---------------------------------------------------------------------
    Chapters, for the "Jump to a chapter" menu.
@@ -136,9 +126,13 @@ export function hasProgress() {
   return Object.keys(state.progress.stars).length > 0 || savedLevelIndex() > 0;
 }
 
-/* The level "Continue" should open: the last one played, if it still
-   exists and is unlocked; otherwise the very first level. */
+/* The level "Continue" should open in Story mode: the last one
+   played, if it's open; otherwise the furthest level that is open. */
 export function continueLevel() {
   const index = savedLevelIndex();
-  return index >= 0 && isUnlocked(index) ? index : 0;
+  if (index >= 0 && isUnlocked(index)) return index;
+  for (let i = LEVELS.length - 1; i > 0; i--) {
+    if (!isTraining(i) && isUnlocked(i)) return i;
+  }
+  return 0;
 }

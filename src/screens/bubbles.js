@@ -37,6 +37,8 @@ export function renderToast(ui, text) {
      { kind: "guide" | "win" | "info" | "piece",
        title: "…" (optional, shown in bold above the text),
        text: "…",
+       more: "…" (optional, a longer text behind a "Learn more" button),
+       moreOpen: true / false (is that longer text showing?),
        wave: { input, element } or null   (an animated light wave),
        button: { label: "Next", action: "tutorial-next" } or null,
        closable: true / false } */
@@ -51,6 +53,7 @@ export function renderBubble(ui, bubble) {
   // A "key" describing the bubble; if it hasn't changed, do nothing.
   const key = [
     bubble.kind, bubble.title, bubble.text, bubble.button?.label, bubble.closable,
+    bubble.more ? "more" : "", bubble.moreOpen,
     JSON.stringify(bubble.wave || null),
   ].join("|");
   ui.bubble.hidden = false;
@@ -61,6 +64,12 @@ export function renderBubble(ui, bubble) {
   ui.bubbleText.textContent = bubble.text;
   ui.bubbleTitle.textContent = bubble.title || "";
   ui.bubbleTitle.hidden = !bubble.title;
+
+  // "Learn more ▾": a button that opens a longer explanation below.
+  ui.bubbleMore.hidden = !bubble.more;
+  ui.bubbleMore.textContent = bubble.moreOpen ? "Show less ▴" : "Learn more ▾";
+  ui.bubbleExtra.hidden = !(bubble.more && bubble.moreOpen);
+  ui.bubbleExtra.textContent = bubble.more || "";
   ui.bubbleClose.hidden = !bubble.closable;
 
   // The animated wave, if this bubble has one.

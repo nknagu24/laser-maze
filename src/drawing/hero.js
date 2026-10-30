@@ -29,7 +29,7 @@ export function drawHero(canvas) {
   const { segments, detectorPower } = traceBeam(HERO.level, HERO.pieces, HERO.rows, HERO.cols);
 
   drawTable(ctx, cell, HERO.rows, HERO.cols);
-  drawBeam(ctx, cell, segments);
+  drawBeam(ctx, cell, segments, false);   // no polarization badges in the picture
   HERO.pieces.forEach((piece) => drawPiece(ctx, cell, piece, false));
   HERO.level.detectors.forEach((d, i) => drawDetector(ctx, cell, d, detectorPower[i]));
   drawLaser(ctx, cell, HERO.level.laser);

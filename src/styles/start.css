@@ -14,7 +14,9 @@
 .lm-title {
   margin: 4px 0 16px;
   font-family: "Silkscreen", "Space Mono", monospace;
-  font-size: clamp(1.8rem, 6vw, 2.6rem);   /* grows with the screen, within limits */
+  /* Grows with the game card (cqi = 1% of its width), within limits,
+     so it always fits beside the Home button on a phone. */
+  font-size: clamp(1.3rem, 6.5cqi, 2.6rem);
   font-weight: 400;
   letter-spacing: 1px;
   color: var(--lm-accent);
@@ -138,24 +140,6 @@
   color: var(--lm-accent);
 }
 
-/* "‹ Back" — quiet, like a link */
-.lm-back {
-  display: block;
-  margin: 4px auto 0;
-  font-family: "Space Mono", monospace;
-  font-size: 0.8rem;
-  color: var(--text, #222222);
-  opacity: 0.65;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.lm-back:hover {
-  opacity: 1;
-}
-
-
 /* ---------- The chapter list ---------- */
 .lm-chapter-list {
   display: flex;
@@ -192,6 +176,7 @@
 
 .lm-chapter-buttons button {
   padding: 5px 10px;
+  white-space: nowrap;      /* keep "With tutorial" on one line */
   font-family: "Space Mono", monospace;
   font-size: 0.75rem;
   color: var(--lm-accent);
@@ -212,7 +197,6 @@
 }
 
 .lm-menu-button:focus-visible,
-.lm-back:focus-visible,
 .lm-chapter-buttons button:focus-visible {
   outline: 2px solid var(--lm-accent);
   outline-offset: 2px;
@@ -220,4 +204,29 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lm-menu-button { transition: none; }
+}
+
+
+/* ---------- Header row: [Home]  LASER MAZE  [space] ----------
+   Three columns: Home, the title, and an empty box the same width as
+   Home. Keeping both sides equal is what keeps the title centred, and
+   lines Home up with the title on every screen size. */
+.lm-start-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.lm-start-header .lm-title {
+  margin: 0;
+}
+
+/* Center the house icon inside its round button */
+.lm-start-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }

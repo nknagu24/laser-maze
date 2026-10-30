@@ -33,6 +33,11 @@
 
 /* The ‹ and › buttons */
 .lm-nav {
+  display: inline-flex;     /* centres the ‹ › or house icon inside */
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;           /* never squashed on narrow phones */
+  padding: 0;
   width: 36px;
   height: 36px;
   font-size: 1.4rem;

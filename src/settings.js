@@ -11,6 +11,7 @@ export const SETTINGS = {
   cols: 8,              // number of cells from left to right
   maxBoardSize: 560,    // the board never grows wider than this (pixels)
   showLabels: true,     // print names ("Mirror", "Laser"…) under things on the table
+  showPolarizationNames: true,  // write "Horizontal", "Right circular"… beside the beam's badges
   toastSeconds: 2.5,    // how long a "Not there!" pop-up stays on screen
 
   colors: {

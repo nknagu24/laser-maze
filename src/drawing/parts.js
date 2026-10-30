@@ -13,6 +13,7 @@ import { SETTINGS } from "../settings.js";
 import { line } from "./canvas.js";
 import { isDetectorLit, hasEnough, hasTooMuch } from "../physics/beam.js";
 import { drawColour, coloursOf } from "../physics/colour.js";
+import { PIECES } from "../physics/pieces.js";
 import { drawPolBadge } from "./symbols.js";
 
 
@@ -523,15 +524,17 @@ function drawDichroic(ctx, cell, piece, isFixed, colour) {
 }
 
 
-/* Fluorescent dye: a small dish of yellow-green liquid. */
+/* Fluorescent dye: a small dish of coloured liquid, in the colour the
+   dye looks (its "looks" in physics/pieces.js). */
 export function drawDye(ctx, cell, piece, isFixed) {
   const c = SETTINGS.colors;
+  const looks = PIECES[piece.type].looks;
   ctx.save();
   ctx.translate(piece.col * cell + cell / 2, piece.row * cell + cell / 2);
   drawMount(ctx, cell, isFixed);
 
-  ctx.fillStyle = c.dye;
-  ctx.shadowColor = c.dye;
+  ctx.fillStyle = looks;
+  ctx.shadowColor = looks;
   ctx.shadowBlur = cell * 0.15;
   ctx.beginPath();
   ctx.arc(0, 0, cell * 0.19, 0, Math.PI * 2);
@@ -540,6 +543,43 @@ export function drawDye(ctx, cell, piece, isFixed) {
   ctx.strokeStyle = c.dyeEdge;
   ctx.lineWidth = 1.5;
   ctx.stroke();
+  ctx.restore();
+}
+
+
+/* A Wollaston prism: a square made of two crystal wedges, split along
+   the diagonal and tinted slightly differently, with two short lines
+   fanning out to show the two beams leaving in different directions. */
+export function drawWollaston(ctx, cell, piece, isFixed) {
+  const c = SETTINGS.colors;
+  ctx.save();
+  ctx.translate(piece.col * cell + cell / 2, piece.row * cell + cell / 2);
+  drawMount(ctx, cell, isFixed, 0.33);
+
+  const s = cell * 0.22;
+  const flip = piece.angle === 45 ? 1 : -1;
+
+  // the two wedges
+  ctx.fillStyle = c.calcite;
+  ctx.beginPath();
+  ctx.moveTo(-s, -s * flip);
+  ctx.lineTo(s, -s * flip);
+  ctx.lineTo(-s, s * flip);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = c.glass;
+  ctx.beginPath();
+  ctx.moveTo(s, -s * flip);
+  ctx.lineTo(s, s * flip);
+  ctx.lineTo(-s, s * flip);
+  ctx.closePath();
+  ctx.fill();
+
+  // outline and the glued diagonal
+  ctx.strokeStyle = c.calciteEdge;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-s, -s, s * 2, s * 2);
+  line(ctx, s, -s * flip, -s, s * flip);
   ctx.restore();
 }
 
@@ -558,6 +598,8 @@ const PIECE_DRAWERS = {
   displacer: drawDisplacer,
   prism: drawPrism,
   dye: drawDye,
+  "dye-orange": drawDye,
+  wollaston: drawWollaston,
   "dichroic-red": (ctx, cell, piece, isFixed) => drawDichroic(ctx, cell, piece, isFixed, "red"),
   "dichroic-green": (ctx, cell, piece, isFixed) => drawDichroic(ctx, cell, piece, isFixed, "green"),
   "dichroic-blue": (ctx, cell, piece, isFixed) => drawDichroic(ctx, cell, piece, isFixed, "blue"),

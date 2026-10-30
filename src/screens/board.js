@@ -30,7 +30,9 @@ import { renderPill, renderToast, renderBubble } from "./bubbles.js";
    buildTray — makes one tray card per piece type the level offers.
    Called once when a level opens. Each card is:
      • a big button with a small picture of the optic, its name, and
-       how many are left (clicking it chooses that optic)
+       how many are left (clicking it chooses that optic). On phones
+       only the picture shows; the name appears on the chosen card
+       (see styles/board.css).
      • a small ⓘ button in its top-right corner that explains the optic
    (Clicks on both are handled in game.js.)
    --------------------------------------------------------------------- */
@@ -46,7 +48,8 @@ export function buildTray(ui, level) {
   ui.tray.innerHTML = types
     .map((type) => `
       <div class="lm-card">
-        <button class="lm-piece" data-type="${type}">
+        <button class="lm-piece" data-type="${type}"
+                aria-label="${trayItem(type).label}" title="${trayItem(type).label}">
           <canvas class="lm-piece-icon" aria-hidden="true"></canvas>
           <span class="lm-piece-name">${trayItem(type).label}</span>
           <span class="lm-piece-count"></span>
@@ -167,7 +170,7 @@ export function renderBoard(ui, pulse = 1) {
    polarization? If not (Training, Chapters 1–2), the beam is drawn
    without polarization badges, to keep the table uncluttered.
    --------------------------------------------------------------------- */
-const POLARIZATION_PIECES = ["polarizer", "halfwave", "quarterwave", "pbs", "displacer"];
+const POLARIZATION_PIECES = ["polarizer", "wollaston", "halfwave", "quarterwave", "pbs", "displacer"];
 
 function usesPolarization(level) {
   const pieces = [...Object.keys(level.tray || {}), ...(level.fixed || []).map((p) => p.type)];
@@ -203,6 +206,8 @@ function chooseBubble(level, step, solved, stars) {
       kind: "piece",
       title: piece.label,
       text: piece.about,
+      more: piece.more || null,
+      moreOpen: state.moreOpen,
       wave: piece.wave || null,
       button: null,
       closable: true,
@@ -261,7 +266,7 @@ function renderSandboxControls(ui, level) {
     polarization: String(level.laser.polarization),
   };
   ui.sandboxBox.querySelectorAll(".lm-chips").forEach((group) => {
-    group.querySelectorAll("button").forEach((button) => {
+    group.querySelectorAll("button[data-value]").forEach((button) => {
       button.classList.toggle("lm-on", button.dataset.value === current[group.dataset.setting]);
     });
   });

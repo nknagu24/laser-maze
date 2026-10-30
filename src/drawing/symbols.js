@@ -5,15 +5,34 @@
      • along polarized beams (drawing/board.js)
      • on detectors that only accept one polarization (drawing/parts.js)
 
-   What the badge shows, as if looking straight along the beam:
-     linear   a tick at the angle:  0° —   45° /   90° |   135° \
-     "R"      the letter R (right-handed circular light)
-     "L"      the letter L (left-handed circular light)
-   (Letters read far better than tiny spinning arrows at this size.)
+   What the badge shows: the polarization's standard letter, the same
+   letters physicists use:
+     H  horizontal (0°)       V  vertical (90°)
+     D  diagonal (45°)        A  anti-diagonal (135°)
+     R  right circular        L  left circular
    ===================================================================== */
 
 import { SETTINGS } from "../settings.js";
-import { line } from "./canvas.js";
+
+/* The standard one-letter name physicists use for each polarization. */
+export function polarizationLetter(pol) {
+  const letters = { 0: "H", 45: "D", 90: "V", 135: "A", R: "R", L: "L" };
+  return letters[pol] || "";
+}
+
+/* The name of a polarization, written beside the badges on the beam,
+   with its letter in brackets. */
+export function polarizationName(pol) {
+  const names = {
+    0: "Horizontal (H)",
+    45: "Diagonal (D)",
+    90: "Vertical (V)",
+    135: "Anti-diagonal (A)",
+    R: "Right circular (R)",
+    L: "Left circular (L)",
+  };
+  return names[pol] || "";
+}
 
 /* x, y: the badge's centre in pixels.  radius: its size in pixels. */
 export function drawPolBadge(ctx, x, y, radius, pol) {
@@ -34,19 +53,11 @@ export function drawPolBadge(ctx, x, y, radius, pol) {
   ctx.lineWidth = Math.max(1.5, radius * 0.25);
   ctx.lineCap = "round";
 
-  if (pol === "R" || pol === "L") {
-    ctx.font = `bold ${Math.max(8, radius * 1.4)}px "Space Mono", monospace`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(pol, x, y + radius * 0.08);
-  } else {
-    // A tick at the angle. Canvas y points down, so we flip the sign.
-    const a = (-pol * Math.PI) / 180;
-    const half = radius * 0.65;
-    const dx = Math.cos(a) * half;
-    const dy = Math.sin(a) * half;
-    line(ctx, x - dx, y - dy, x + dx, y + dy);
-  }
+  // The polarization's standard letter: H, V, D, A, R or L.
+  ctx.font = `bold ${Math.max(8, radius * 1.4)}px "Space Mono", monospace`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(polarizationLetter(pol), x, y + radius * 0.08);
 
   ctx.restore();
 }

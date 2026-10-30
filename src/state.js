@@ -18,13 +18,15 @@ export const state = {
   startView: "menu",  // on the start screen: "menu", "story" or "chapters"
   mode: "story",    // "story" (the levels) or "sandbox"
   sandbox: null,    // the Sandbox table, while it's open (data/sandbox.js)
-  skipGuides: false,  // true after "Jump to a chapter → without guides"
+  skipGuides: false,  // true after "Jump to a chapter → without tutorial"
+  freePlay: false,    // true after "Jump to a chapter": every level is open
   played: false,    // becomes true once a level has been opened this visit
 
   // Bubbles and training
   tutorialStep: 0,     // which training step the player is on
   infoOpen: false,     // is the ⓘ note bubble showing?
   pieceInfo: null,     // which optic's ⓘ explanation is showing ("mirror"…), or null
+  moreOpen: false,     // is that explanation's "Learn more" part open?
   winClosed: false,    // did the player close the "Solved!" bubble?
   toast: "",           // the short pop-up message showing now ("" = none)
   progress: loadProgress(),   // saved stars and last level (storage/progress.js)
